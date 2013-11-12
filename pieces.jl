@@ -83,20 +83,14 @@ show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
 
 
 function show(io::IO, cb::ChessBoard) 
-  # first print the "abcdef" line,
-  # then the lines in the board, lined
-  # numbers 1..8
-  # end with an "abcdef" line
- println(io, " abcdef")
  for y1 = 1:8
   y = 9 - y1;
   print(io, y)
    for x = 1:8
-       @printf(io, "%s",  cb.board[y, x])
+       @printf(io, "%s",  cb.board[y, x].printrep)
    end
    println(io, y)
   end
- println(io, " abcdef")
 end
 
 
