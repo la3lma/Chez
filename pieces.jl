@@ -8,15 +8,15 @@
 ## program is not something I'm very interested in :-)
 ##
 
-
+import Base.show
 
 type Color 
    name:: String
    shortName:: String
 end
 
-black = Color("Black", "b");
-white = Color("White", "w"); 
+black       = Color("Black", "b");
+white       = Color("White", "w"); 
 transparent = Color("Blank", " "); 
 
 abstract PieceType
@@ -58,21 +58,50 @@ wki = ChessPiece(white, king,  "k");
 
 bs = ChessPiece(transparent, blank,  " ");
 
+type ChessBoard
+   # This must be an 8x8 matrice. That fact shoul
+   # be a constraint somewhere
+   board::Array{ChessPiece}
+end
 
 ## XXX  Don't know how to make a chessboard
-startingBoard = [
- [br, bk, bb, bq, bk, bb, bk, br], 
- [bp, bp, bp, bp, bp, bp, bp, bp], 
- [bs, bs, bs, bs, bs, bs, bs, bs,], 
- [bs, bs, bs, bs, bs, bs, bs, bs,], 
- [bs, bs, bs, bs, bs, bs, bs, bs,], 
- [bs, bs, bs, bs, bs, bs, bs, bs,], 
- [wp, wp, wp, wp, wp, wp, wp, wp], 
- [wr, wk, wb, wq, wk, wb, wk, wr], 
+startingBoardArray = [
+  wr wk wb wq wk wb wk wr
+  wp wp wp wp wp wp wp wp;
+  bs bs bs bs bs bs bs bs; 
+  bs bs bs bs bs bs bs bs;
+  bs bs bs bs bs bs bs bs;
+  bs bs bs bs bs bs bs bs;
+  bp bp bp bp bp bp bp bp; 
+  br bk bb bq bk bb bk br; 
 ];
 
-# Wring it into the right shape ;)
-startingboard=reshape(startingBoard, 8, 8)'
+startingBoard = ChessBoard(startingBoardArray)
 
-## Once I know how to make a chessboard, I should
-## figure out to print one nicely and compactly
+## Printing chessboards
+show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
+
+
+function show(io::IO, cb::ChessBoard) 
+  # first print the "abcdef" line,
+  # then the lines in the board, lined
+  # numbers 1..8
+  # end with an "abcdef" line
+ println(io, " abcdef")
+ for y1 = 1:8
+  y = 9 - y1;
+  print(io, y)
+   for x = 1:8
+       @printf(io, "%s",  cb.board[y, x])
+   end
+   println(io, y)
+  end
+ println(io, " abcdef")
+end
+
+
+
+# TODO
+#  o Printing of compact representations
+#     - To print compact represented boards, transform
+#       first using map and let it rip.
