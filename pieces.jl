@@ -1,7 +1,7 @@
 ##
 ## The Chess kata in Julia
 ##
-## The objective is to write a simple minimax/alpha-beta 
+## The objective is to write a simple minimax/alpha-beta
 ## correctly playing chess game.  The purpose behind this
 ## objective is to do some nontrivial programming in Julia
 ## just to get a feel for it. Playing strength of the chess
@@ -10,14 +10,14 @@
 
 import Base.show
 
-type Color 
+type Color
    name:: String
    shortName:: String
 end
 
 black       = Color("Black", "b");
-white       = Color("White", "w"); 
-transparent = Color("Blank", " "); 
+white       = Color("White", "w");
+transparent = Color("Blank", " ");
 
 abstract PieceType
 type Pawn   <: PieceType end
@@ -64,25 +64,28 @@ type ChessBoard
    board::Array{ChessPiece}
 end
 
-## XXX  Don't know how to make a chessboard
+
 startingBoardArray = [
   wr wk wb wq wk wb wk wr
   wp wp wp wp wp wp wp wp;
-  bs bs bs bs bs bs bs bs; 
   bs bs bs bs bs bs bs bs;
   bs bs bs bs bs bs bs bs;
   bs bs bs bs bs bs bs bs;
-  bp bp bp bp bp bp bp bp; 
-  br bk bb bq bk bb bk br; 
+  bs bs bs bs bs bs bs bs;
+  bp bp bp bp bp bp bp bp;
+  br bk bb bq bk bb bk br;
 ];
 
 startingBoard = ChessBoard(startingBoardArray)
 
-## Printing chessboards
+## XXX This is a very inefficient representation.  Can
+##     we do better?
+
+## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
 
-
-function show(io::IO, cb::ChessBoard) 
+## Printing chessboards
+function show(io::IO, cb::ChessBoard)
  for y1 = 1:8
   y = 9 - y1;
   print(io, y)
@@ -90,12 +93,22 @@ function show(io::IO, cb::ChessBoard)
        @printf(io, "%s",  cb.board[y, x].printrep)
    end
    println(io, y)
-  end
+ end
 end
 
 
 
-# TODO
-#  o Printing of compact representations
-#     - To print compact represented boards, transform
-#       first using map and let it rip.
+# From a chessboard, extract all the moves for all
+# the pieces for a particular color on the board.
+# Return an array (a set) of Move instances
+function getMoves(color::Color, board::ChessBoard)
+   result = []
+
+   # Select all the coords for the pieces with the
+   #    right colors.
+   # For those coords, generate all the moves and add
+   #    them to the result
+   # Return the result
+   return result
+end
+
