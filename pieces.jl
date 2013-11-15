@@ -9,6 +9,7 @@
 ##
 
 import Base.show
+using  Base.Test
 
 type Color
    name:: String
@@ -117,6 +118,8 @@ function allCoords()
 end
 
 coords = allCoords()
+
+@test 64 == length(coords)
 
 
 function getPieceAt(board::ChessBoard, coord::Coord) 
