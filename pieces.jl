@@ -161,3 +161,5 @@ function getMoves(color::Color, board::ChessBoard)
    return result
 end
 
+@test 20 == length(getMoves(white, startingBoard))
+@test 20 == length(getMoves(black, startingBoard))
