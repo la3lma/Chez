@@ -79,7 +79,7 @@ startingBoardArray = [
 startingBoard = ChessBoard(startingBoardArray)
 
 ## XXX This is a very inefficient representation.  Can
-##     we do better?
+ ##     we do better?
 
 ## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
@@ -97,18 +97,64 @@ function show(io::IO, cb::ChessBoard)
 end
 
 
+##
+##  Representing movement
+##
 
-# From a chessboard, extract all the moves for all
+type Coord
+    x:: Int64 # Should be Uint8!
+    y:: Int64
+end
+
+
+function allCoords()
+    result = Coord[]
+     for y = 1:8, x = 1:8
+        c = Coord(x, y)
+        push!(result, c)
+     end
+     return result
+end
+
+coords = allCoords()
+
+
+function getPieceAt(board::ChessBoard, coord::Coord) 
+    return board.board(coord.x, coord.y)
+end
+
+
+# Get coordinates for all the pieces of a particular
+# color
+function getCoordsForPieces(color::Color, board::ChessBoard)
+   return filter(c -> (getPieceAt(board, c).color == color), coords)
+end
+
+
+type Move
+    start:: Coord
+    destination:: Coord
+    capture:: Bool
+end
+
+ 
+function getMovesForPiece(piece::PieceType, board::ChessBoard, coord::Coord)
+  # To be improved on
+  []
+end
+
+# From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-   result = []
-
-   # Select all the coords for the pieces with the
-   #    right colors.
-   # For those coords, generate all the moves and add
-   #    them to the result
-   # Return the result
+   ## This is inelegant, it should be purely functional
+   ## set and list processing!
+   result = Move[]
+   for coord in  getCoordsForPieces(color, board)
+     piece = getPieceAt(boarrd, coord)
+     movesFromPiece = getMovesForPiece(piece.piecetype, board, coord)
+     push!(result, movesFromPiece)
+   end
    return result
 end
 
