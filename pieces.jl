@@ -123,7 +123,7 @@ coords = allCoords()
 
 
 function getPieceAt(board::ChessBoard, coord::Coord) 
-    return board.board(coord.x, coord.y)
+    return board.board[coord.x, coord.y]
 end
 
 
