@@ -39,7 +39,7 @@ blank  = Blank();
 
 type ChessPiece
   color:: Color
-  piece:: PieceType
+  piecetype:: PieceType
   printrep:: String
 end
 
@@ -154,7 +154,7 @@ function getMoves(color::Color, board::ChessBoard)
    ## set and list processing!
    result = Move[]
    for coord in  getCoordsForPieces(color, board)
-     piece = getPieceAt(boarrd, coord)
+     piece = getPieceAt(board, coord)
      movesFromPiece = getMovesForPiece(piece.piecetype, board, coord)
      push!(result, movesFromPiece)
    end
