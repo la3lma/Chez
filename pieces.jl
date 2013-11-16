@@ -138,28 +138,89 @@ type Move
     start:: Coord
     destination:: Coord
     capture:: Bool
+    piece:: Piece
 end
-
  
-function getMovesForPiece(piece::PieceType, board::ChessBoard, coord::Coord)
+function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   # To be improved on
   []
 end
+
+# XXX We need to establish addition of coordinates.
+#     Coord(a,b) + Coord(c,d) == Coord(a+b, c+d), also multiplication
+#     with a scalar:
+#      foo * Coord(a,b) == Coord(foo*a, foo*b)
+
+function getMovesForPiece(piece::Pawn, board::ChessBoard, coord::Coord)
+ 
+  # First we establish a jump speed that is color dependent
+  # (for pawns only)
+  if (piece.color == white) 
+     speed = 1
+  else
+     speed = -1
+  end
+  
+  # Then we establish a single non-capturing movement ray
+  if  (cord.y == pawnStartLine(piece.color))
+     ncray = [Coord(0,speed), 2 * Coord(0, speed)]
+  else 
+     ncray = [Coord(0,speed)]
+  endif
+
+  # And a set of possibly capturing jumps
+  captureJumps = [Coord(1,speed), Coord(-1, speed)]
+
+  # Then we have to process these alternatives
+  # to check that they are inside the board etc.
+  moves = union([movesFromRay(coord, ncray,false),
+		 movesFromJumps(coord, captureJumps, true)])
+
+  # Finally we do the pawn-specific tranformation
+  # if we find ourself ending up on the finishing line
+  for move in moves
+      if (move.destination.y == finishLine(piece.color))
+	 move.piece = queenOfColor(piece.color)
+      endif
+  end
+  return moves
+end
+
+function movesFromJumps(coord::Coord, ray::Coord[], allowCaptures::Bool)
+
+end
+
+function movesFromRay(coord::Coord, ray::Coord[], allowCaptures::Bool)
+
+end
+
+function pawnStartLine(color::Color)
+   if (color == black)
+     return 7
+   else
+     return 2
+   end
+end
+
+function finishLine(color::Color) 
+    if (color == black)
+        return 1
+    else
+        return 8
+    end   
+end
+
+
 
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-   ## This is inelegant, it should be purely functional
-   ## set and list processing!
-   result = Move[]
-   for coord in  getCoordsForPieces(color, board)
-     piece = getPieceAt(board, coord)
-     movesFromPiece = getMovesForPiece(piece.piecetype, board, coord)
-     push!(result, movesFromPiece)
-   end
-   return result
+ union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, startingBoard, c) 
+   for c=getCoordsForPieces(black,startingBoard)
+ })
 end
 
 @test 20 == length(getMoves(white, startingBoard))
 @test 20 == length(getMoves(black, startingBoard))
+
