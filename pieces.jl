@@ -196,11 +196,32 @@ function finishLine(color::Color)
     end
 end
 
-function movesFromJumps(coord, ray, allowCaptures)
-    return []
+function moveFromJump(board, coord, jump, requireCaptures)
+     destination = start + jump
+     destinationPiece = board.getPieceAt(destination)
+     startPiece = board.getPieceAt(start)
+     isCapture = destinationPiece.color != startPiece.color
+     legalMove = destinationPiece.color != startPiece.color
+
+     if (!legalMove) 
+        return []
+     elseif (requireCapture)
+          if (capture)
+	    return [Move(co, destinationCoordinate, true, destinationPiece)]
+	  else
+	    return []
+          end
+     else
+          return [Move(co, destinationCoordinate, isCapture, destinationPiece)]
+     end
 end
 
-function movesFromRay(coord, ray, allowCaptures)
+# Add a couple of unit tests here.
+function movesFromJumps(board, coord, jumps, requireCaptures)
+  []
+end
+
+function movesFromRay(board, coord, ray, requireCaptures)
     return []
 end
 
@@ -227,8 +248,8 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
   moves = validMoves(
-  	    union([movesFromRay(coord, ncray,false),
-    		   movesFromJumps(coord, captureJumps, true)]))
+  	    union([movesFromRay(board, coord, ncray,false),
+    		   movesFromJumps(board, coord, captureJumps, true)]))
   
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
