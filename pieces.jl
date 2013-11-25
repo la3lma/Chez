@@ -174,18 +174,18 @@ end
 # raysand filtering.
 
 
-function getMovesForPiece(piece::Pawn, board::ChessBoard, coord::Coord)
+function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
  
   # First we establish a jump speed that is color dependent
   # (for pawns only)
-  if (piece.color == white) 
+  if (color == white) 
      speed = 1
   else
      speed = -1
   end
   
   # Then we establish a single non-capturing movement ray
-  if  (cord.y == pawnStartLine(piece.color))
+  if  (coord.y == pawnStartLine(color))
      ncray = [Coord(0,speed), 2 * Coord(0, speed)]
   else 
      ncray = [Coord(0,speed)]
@@ -203,19 +203,19 @@ function getMovesForPiece(piece::Pawn, board::ChessBoard, coord::Coord)
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
   for move in moves
-      if (move.destination.y == finishLine(piece.color))
-	 move.piece = queenOfColor(piece.color)
+      if (move.destination.y == finishLine(color))
+	 move.piece = queenOfColor(color)
       end
   end
   return moves
 end
 
-function movesFromJumps(coord::Coord, ray::Coord[], allowCaptures::Bool)
-
+function movesFromJumps(coord, ray, allowCaptures)
+    return []
 end
 
-function movesFromRay(coord::Coord, ray::Coord[], allowCaptures::Bool)
-
+function movesFromRay(coord, ray, allowCaptures)
+    return []
 end
 
 function pawnStartLine(color::Color)
@@ -239,11 +239,11 @@ end
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
-#function getMoves(color::Color, board::ChessBoard)
-#    union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, startingBoard, c) 
-#            for c=getCoordsForPieces(black,startingBoard)
-#         })
-#end
+function getMoves(color::Color, board::ChessBoard)
+    union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
+            for c=getCoordsForPieces(black,startingBoard)
+         })
+end
 
 @test 20 == length(getMoves(white, startingBoard))
 @test 20 == length(getMoves(black, startingBoard))
