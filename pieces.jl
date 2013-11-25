@@ -198,8 +198,8 @@ end
 
 function moveFromJump(board, coord, jump, requireCaptures)
      destination = start + jump
-     destinationPiece = board.getPieceAt(destination)
-     startPiece = board.getPieceAt(start)
+     destinationPiece = getPieceAt(board, destination)
+     startPiece = getPieceAt(board, start)
      isCapture = destinationPiece.color != startPiece.color
      legalMove = destinationPiece.color != startPiece.color
 
@@ -215,6 +215,9 @@ function moveFromJump(board, coord, jump, requireCaptures)
           return [Move(co, destinationCoordinate, isCapture, destinationPiece)]
      end
 end
+
+@test [Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))] == moveFromJump(startingBoard, Coord(1,2), Coord(1,3), false)
+
 
 # Add a couple of unit tests here.
 function movesFromJumps(board, coord, jumps, requireCaptures)
