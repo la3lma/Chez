@@ -196,6 +196,14 @@ function finishLine(color::Color)
     end
 end
 
+function movesFromJumps(coord, ray, allowCaptures)
+    return []
+end
+
+function movesFromRay(coord, ray, allowCaptures)
+    return []
+end
+
 
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
   # First we establish a jump speed that is color dependent
@@ -234,13 +242,6 @@ end
 
 @test 16 == length(getMovesForPiece(pawn, white, startingBoard, Coord(1,2)))
 
-function movesFromJumps(coord, ray, allowCaptures)
-    return []
-end
-
-function movesFromRay(coord, ray, allowCaptures)
-    return []
-end
 
 
 
