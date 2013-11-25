@@ -146,10 +146,13 @@ function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   []
 end
 
-# XXX We need to establish addition of coordinates.
-#     Coord(a,b) + Coord(c,d) == Coord(a+b, c+d), also multiplication
-#     with a scalar:
-#      foo * Coord(a,b) == Coord(foo*a, foo*b)
+# Coordinates are linar, so we must define addition and multiplication
+# with numbers
+
++(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c1.y)
+*(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
+*(c::Coord,  n::Number) = n * c
+
 
 
 function isValidOrdinate(c::Int) 
