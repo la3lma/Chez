@@ -173,6 +173,9 @@ end
 # Towers, kings, bishops are all made up by
 # raysand filtering.
 
+function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
 
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
  
