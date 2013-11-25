@@ -10,3 +10,5 @@ TODO
    o Movement representation
  o Board evaluator
  o Game mechanics
+  o Consider using http://chessboardjs.com/docs to add som real chessboard action.
+
