@@ -79,6 +79,24 @@ startingBoardArray = [
 
 startingBoard = ChessBoard(startingBoardArray)
 
+type Coord
+    x:: Int64 # Should be Uint8!
+    y:: Int64
+end
+
+function getPieceAt(board::ChessBoard, coord::Coord) 
+    return board.board[coord.x, coord.y]
+end
+
+
+
+# Check that the coordinates are not messed up
+@test getPieceAt(startingBoard, Coord(1,1)) == wr
+@test getPieceAt(startingBoard, Coord(1,2)) == wp
+@test getPieceAt(startingBoard, Coord(1,5)) == wk
+@test getPieceAt(startingBoard, Coord(1,4)) == wq
+
+
 ## XXX This is a very inefficient representation.  Can
  ##     we do better?
 
@@ -102,10 +120,6 @@ end
 ##  Representing movement
 ##
 
-type Coord
-    x:: Int64 # Should be Uint8!
-    y:: Int64
-end
 
 
 function allCoords()
@@ -122,9 +136,6 @@ coords = allCoords()
 @test 64 == length(coords)
 
 
-function getPieceAt(board::ChessBoard, coord::Coord) 
-    return board.board[coord.x, coord.y]
-end
 
 
 # Get coordinates for all the pieces of a particular
@@ -196,27 +207,54 @@ function finishLine(color::Color)
     end
 end
 
-function moveFromJump(board, coord, jump, requireCaptures)
+function moveFromJump(board, start, jump, requireCaptures)
      destination = start + jump
+
+     println("start = ")
+     println(start)
+     println("destination = ")
+     println(destination)
+
      destinationPiece = getPieceAt(board, destination)
      startPiece = getPieceAt(board, start)
-     isCapture = destinationPiece.color != startPiece.color && destinationPieceColor != blank
+
+     println("destinationPiece = ")
+     println(destinationPiece)
+
+     println("startPiece = ")
+     println(startPiece)
+
+     println("startPiece.color = ")
+     println(startPiece.color)
+
+     println("destinationPiece.color = ")
+     println(destinationPiece.color)
+
+
+     isCapture = (destinationPiece.color != startPiece.color) && (destinationPiece.color != blank)
      legalMove = destinationPiece.color != startPiece.color
 
+     println("isCapture = ")
+     println(isCapture)
+
+     println("legalMove = ")
+     println(legalMove)
+
+
      if (!legalMove) 
-        return []
+        return null
      elseif (requireCapture)
           if (capture)
 	    return [Move(co, destinationCoordinate, true, destinationPiece)]
 	  else
-	    return []
+	    return null
           end
      else
-          return [Move(co, destinationCoordinate, isCapture, destinationPiece)]
+          return Move(co, destinationCoordinate, isCapture, destinationPiece)
      end
 end
 
-@test [Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))] == moveFromJump(startingBoard, Coord(1,2), Coord(1,3), false)
+@test Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3))) == moveFromJump(startingBoard, Coord(1,2), Coord(0,1), false)
 
 
 # Add a couple of unit tests here.
