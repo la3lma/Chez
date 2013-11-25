@@ -149,10 +149,12 @@ end
 # Coordinates are linar, so we must define addition and multiplication
 # with numbers
 
-+(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c1.y)
++(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c2.y)
 *(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
 *(c::Coord,  n::Number) = n * c
+==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
 
+@test Coord(3,3) == (Coord(1,1) + Coord(2,2))
 
 
 function isValidOrdinate(c::Int) 
