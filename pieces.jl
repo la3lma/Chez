@@ -157,9 +157,7 @@ end
 @test Coord(3,3) == Coord(1,1) + Coord(2,2)
 
 
-function isValidOrdinate(c::Int) 
-    c <= 1 && c <= 8
-end
+isValidOrdinate(c::Int)  =  c <= 1 && c <= 8
 
 function isValidCoord(coord::Coord) 
     return isValidOrdinate(coord.x) &&
@@ -182,8 +180,24 @@ function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, co
   []
 end
 
+function pawnStartLine(color::Color)
+   if (color == black)
+     return 7
+   else
+     return 2
+   end
+end
+
+function finishLine(color::Color)
+    if (color == black)
+        return 1
+    else
+        return 8
+    end
+end
+
+
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
- 
   # First we establish a jump speed that is color dependent
   # (for pawns only)
   if (color == white) 
@@ -218,6 +232,8 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   return moves
 end
 
+@test 16 == length(getMovesForPiece(pawn, white, startingBoard, Coord(1,2)))
+
 function movesFromJumps(coord, ray, allowCaptures)
     return []
 end
@@ -226,21 +242,6 @@ function movesFromRay(coord, ray, allowCaptures)
     return []
 end
 
-function pawnStartLine(color::Color)
-   if (color == black)
-     return 7
-   else
-     return 2
-   end
-end
-
-function finishLine(color::Color) 
-    if (color == black)
-        return 1
-    else
-        return 8
-    end   
-end
 
 
 
@@ -248,11 +249,13 @@ end
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-    union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
+	     union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
             for c=getCoordsForPieces(black,startingBoard)
          })
 end
 
-@test 20 == length(getMoves(white, startingBoard))
-@test 20 == length(getMoves(black, startingBoard))
+
+# All the opening moves for pawns
+@test 16 == length(getMoves(white, startingBoard))
+@test 16 == length(getMoves(black, startingBoard))
 
