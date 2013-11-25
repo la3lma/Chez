@@ -200,7 +200,7 @@ function moveFromJump(board, coord, jump, requireCaptures)
      destination = start + jump
      destinationPiece = getPieceAt(board, destination)
      startPiece = getPieceAt(board, start)
-     isCapture = destinationPiece.color != startPiece.color
+     isCapture = destinationPiece.color != startPiece.color && destinationPieceColor != blank
      legalMove = destinationPiece.color != startPiece.color
 
      if (!legalMove) 
