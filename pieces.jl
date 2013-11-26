@@ -286,13 +286,16 @@ function moveFromJump(board, start, jump, requireCaptures)
      end
 end
 
+# Test movement of a single pawn
 @test Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3))) == moveFromJump(startingBoard, Coord(1,2), Coord(0,1), false)
 
 
 # Add a couple of unit tests here.
-function movesFromJumps(board, coord, jumps, requireCaptures)
-  []
+function movesFromJumps(board, start, jumps, requireCaptures)
+    map(j -> moveFromJump(board, start, j, requireCaptures), jumps)
 end
+
+@test [ Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))] == movesFromJumps(startingBoard, Coord(1,2),[Coord(0,1)], false)
 
 function movesFromRay(board, coord, ray, requireCaptures)
     return []
