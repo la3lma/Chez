@@ -16,9 +16,26 @@ type Color
    shortName:: String
 end
 
+function ==(c1::Color, c2::Color)
+	c1.name == c2.name && c1.shortName == c2.shortName
+end
+
+@test Color("a","b") == Color("a", "b")
+@test Color("a","b") != Color("b", "a")
+
+
 black       = Color("Black", "b");
 white       = Color("White", "w");
 transparent = Color("Blank", " ");
+
+@test white == white
+@test white != black
+@test white != transparent
+
+@test black == black
+@test black != white
+@test black != transparent
+
 
 abstract PieceType
 type Pawn   <: PieceType end
@@ -41,6 +58,12 @@ type ChessPiece
   color:: Color
   piecetype:: PieceType
   printrep:: String
+end
+
+function ==(cp1::ChessPiece, cp2::ChessPiece)
+  return (cp1.color == cp2.color) &&
+         (cp1.piecetype == cp2.piecetype) &&
+	 (cp1.printrep == cp2.printrep)
 end
 
 bp  = ChessPiece(black, pawn,  "P");
@@ -152,7 +175,14 @@ type Move
     capture:: Bool
     piece:: ChessPiece
 end
- 
+
+function ==(m1::Move, m2::Move)
+     return (m1.start == m2.start) &&
+            (m1.destination == m2.destination) &&
+	    (m1.capture == m2.capture) &&
+	    (m1.piece == m2.piece)
+end 
+
 function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   # To be improved on
   []
@@ -232,26 +262,27 @@ function moveFromJump(board, start, jump, requireCaptures)
      println(destinationPiece.color)
 
 
-     isCapture = (destinationPiece.color != startPiece.color) && (destinationPiece.color != blank)
-     legalMove = destinationPiece.color != startPiece.color
+     isLegalMove = destinationPiece.color != startPiece.color
+     isCapture = isLegalMove && (destinationPiece.color != transparent)
+
 
      println("isCapture = ")
      println(isCapture)
 
-     println("legalMove = ")
-     println(legalMove)
+     println("isLegalMove = ")
+     println(isLegalMove)
 
 
-     if (!legalMove) 
+     if (!isLegalMove) 
         return null
-     elseif (requireCapture)
-          if (capture)
-	    return [Move(co, destinationCoordinate, true, destinationPiece)]
+     elseif (requireCaptures)
+          if (isCapture)
+	    return Move(start, destination, isCapture, destinationPiece)
 	  else
 	    return null
           end
      else
-          return Move(co, destinationCoordinate, isCapture, destinationPiece)
+          return Move(start, destination, isCapture, destinationPiece)
      end
 end
 
