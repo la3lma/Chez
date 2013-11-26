@@ -283,7 +283,7 @@ end
 
 
 # Add a couple of unit tests here.
-function movesFromJumps(board, start, jumps, requireCaptures)
+function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
     map(j -> moveFromJump(board, start, j, requireCaptures), jumps)
 end
 
@@ -298,7 +298,7 @@ rookJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
 	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
 
 function getMovesForPiece(piece::Knight, board::ChessBoard, coord::Coord)
-    movesFromJumps(coord, rookJumps, true)
+    movesFromJumps(board, coord, rookJumps, false)
 end
 
 # Expand this to all coordinates for convenience
