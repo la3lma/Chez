@@ -219,36 +219,10 @@ function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   []
 end
 
-function validMoves(moves)
+function validMoves(moves::Array{Move, 1})
      filter(m -> isValidCoord(m.destination), moves)
 end
-rookJumps = [Coord(2, 1),Coord(2, -1), Coord(-2, 1), Coord(-2, -1)]
-function getMovesForPiece(piece::Rook, board::ChessBoard, coord::Coord)
-     validMoves(board,movesFromJumps(coord, rookJumps, true))
-end
 
-# Towers, kings, bishops are all made up by
-# raysand filtering.
-
-function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
-  []
-end
-
-function pawnStartLine(color::Color)
-   if (color == black)
-     return 7
-   else
-     return 2
-   end
-end
-
-function finishLine(color::Color)
-    if (color == black)
-        return 1
-    else
-        return 8
-    end
-end
 
 function moveFromJump(board, start, jump, requireCaptures)
      destination = start + jump
@@ -320,6 +294,46 @@ function movesFromRay(board, coord, ray, requireCaptures)
 end
 
 
+rookJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
+	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
+
+function getMovesForPiece(piece::Knight, board::ChessBoard, coord::Coord)
+    movesFromJumps(coord, rookJumps, true)
+end
+
+# Expand this to all coordinates for convenience
+b1=Coord(2,1)
+a2=Coord(1,2)
+a3=Coord(1,3)
+c3=Coord(3,3)
+c2=Coord(3,2)
+
+@test [Move(b1, a3, false, wk), Move(b1, c3, false, wr)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
+
+# Towers, kings, bishops are all made up by
+# raysand filtering.
+
+function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
+function pawnStartLine(color::Color)
+   if (color == black)
+     return 7
+   else
+     return 2
+   end
+end
+
+function finishLine(color::Color)
+    if (color == black)
+        return 1
+    else
+        return 8
+    end
+end
+
+
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
   # First we establish a jump speed that is color dependent
   # (for pawns only)
@@ -341,13 +355,15 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
 
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
-  moves = validMoves(
-  	    union([movesFromJumps(board, coord, ncray, false),
-    		   movesFromJumps(board, coord, captureJumps, true)]))
+  moves = union([movesFromJumps(board, coord, ncray, false),
+    		 movesFromJumps(board, coord, captureJumps, true)])
+  moves = filter(m -> m != null, moves) #Kludge
   
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
   for move in moves
+      println("Move = ")
+      println(move)
       if (move.destination.y == finishLine(color))
 	 move.piece = queenOfColor(color)
       end
@@ -355,10 +371,8 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   return moves
 end
 
-@test 16 == length(getMovesForPiece(pawn, white, startingBoard, Coord(1,2)))
-
-
-
+@test 2 == length(getMovesForPiece(pawn, white, startingBoard, Coord(1,2)))
+@test 4 == length(getMovesForPiece(rook, white, startingBoard, Coord(2,1)))
 
 
 # From a chessboard, extract all the possible moves for all
@@ -366,12 +380,12 @@ end
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
 	     union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
-            for c=getCoordsForPieces(black,startingBoard)
+                for c=getCoordsForPieces(black,startingBoard)
          })
 end
 
 
 # All the opening moves for pawns
-@test 16 == length(getMoves(white, startingBoard))
-@test 16 == length(getMoves(black, startingBoard))
+@test 24 == length(getMoves(white, startingBoard))
+@test 24 == length(getMoves(black, startingBoard))
 
