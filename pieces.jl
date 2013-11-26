@@ -224,7 +224,7 @@ function validMoves(moves::Array{Move, 1})
 end
 
 
-function moveFromJump(board, start, jump, requireCaptures)
+function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptures::Bool)
      destination = start + jump
  
 
@@ -282,9 +282,10 @@ end
 @test Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3))) == moveFromJump(startingBoard, Coord(1,2), Coord(0,1), false)
 
 
-# Add a couple of unit tests here.
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
-    map(j -> moveFromJump(board, start, j, requireCaptures), jumps)
+    map(j -> 
+	  moveFromJump(board, start, j, requireCaptures),
+        jumps)
 end
 
 @test [ Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))] == movesFromJumps(startingBoard, Coord(1,2),[Coord(0,1)], false)
