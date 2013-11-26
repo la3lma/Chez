@@ -67,7 +67,7 @@ end
 
 
 startingBoardArray = [
-  wr wk wb wq wk wb wk wr
+  wr wk wb wq wk wb wk wr;
   wp wp wp wp wp wp wp wp;
   bs bs bs bs bs bs bs bs;
   bs bs bs bs bs bs bs bs;
@@ -85,16 +85,17 @@ type Coord
 end
 
 function getPieceAt(board::ChessBoard, coord::Coord) 
-    return board.board[coord.x, coord.y]
+    return board.board[coord.y, coord.x]
 end
 
 
 
 # Check that the coordinates are not messed up
 @test getPieceAt(startingBoard, Coord(1,1)) == wr
-@test getPieceAt(startingBoard, Coord(1,2)) == wp
-@test getPieceAt(startingBoard, Coord(1,5)) == wk
-@test getPieceAt(startingBoard, Coord(1,4)) == wq
+@test getPieceAt(startingBoard, Coord(2,1)) == wk
+@test getPieceAt(startingBoard, Coord(5,1)) == wk
+@test getPieceAt(startingBoard, Coord(4,1)) == wq
+@test getPieceAt(startingBoard, Coord(4,2)) == wp
 
 
 ## XXX This is a very inefficient representation.  Can
