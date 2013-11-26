@@ -107,6 +107,37 @@ type Coord
     y:: Int64
 end
 
+
+# Coordinates are linar, so we must define addition and multiplication
+# with numbers
+
++(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c2.y)
+*(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
+*(c::Coord,  n::Number) = n * c
+==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
+
+@test Coord(3,3) == Coord(1,1) + Coord(2,2)
+
+
+isValidOrdinate(c::Int)  =  1 <= c && c <= 8
+
+@test !isValidOrdinate(0)
+@test  isValidOrdinate(1)
+@test  isValidOrdinate(8)
+@test !isValidOrdinate(9)
+
+function isValidCoord(coord::Coord) 
+    return isValidOrdinate(coord.x) &&
+           isValidOrdinate(coord.y)
+end
+
+@test isValidCoord(Coord(1,1))
+@test isValidCoord(Coord(1,2))
+@test isValidCoord(Coord(1,3))
+@test !isValidCoord(Coord(0,2))
+@test !isValidCoord(Coord(1,0))
+
+
 function getPieceAt(board::ChessBoard, coord::Coord) 
     return board.board[coord.y, coord.x]
 end
@@ -188,28 +219,9 @@ function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   []
 end
 
-# Coordinates are linar, so we must define addition and multiplication
-# with numbers
-
-+(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c2.y)
-*(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
-*(c::Coord,  n::Number) = n * c
-==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
-
-@test Coord(3,3) == Coord(1,1) + Coord(2,2)
-
-
-isValidOrdinate(c::Int)  =  c <= 1 && c <= 8
-
-function isValidCoord(coord::Coord) 
-    return isValidOrdinate(coord.x) &&
-           isValidOrdinate(coord.y)
-end
-
 function validMoves(moves)
      filter(m -> isValidCoord(m.destination), moves)
 end
-
 rookJumps = [Coord(2, 1),Coord(2, -1), Coord(-2, 1), Coord(-2, -1)]
 function getMovesForPiece(piece::Rook, board::ChessBoard, coord::Coord)
      validMoves(board,movesFromJumps(coord, rookJumps, true))
@@ -240,11 +252,17 @@ end
 
 function moveFromJump(board, start, jump, requireCaptures)
      destination = start + jump
+ 
 
      println("start = ")
      println(start)
      println("destination = ")
      println(destination)
+
+    if (!isValidCoord(destination))
+        return null
+     end
+
 
      destinationPiece = getPieceAt(board, destination)
      startPiece = getPieceAt(board, start)
@@ -324,7 +342,7 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
   moves = validMoves(
-  	    union([movesFromRay(board, coord, ncray,false),
+  	    union([movesFromJumps(board, coord, ncray, false),
     		   movesFromJumps(board, coord, captureJumps, true)]))
   
   # Finally we do the pawn-specific tranformation
