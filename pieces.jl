@@ -308,7 +308,7 @@ a3=Coord(1,3)
 c3=Coord(3,3)
 c2=Coord(3,2)
 
-@test [Move(b1, a3, false, wk), Move(b1, c3, false, wr)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
+@test [Move(b1, a3, false, wk), Move(b1, c3, false, wk)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
 
 # Towers, kings, bishops are all made up by
 # raysand filtering.
