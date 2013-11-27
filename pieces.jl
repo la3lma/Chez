@@ -407,8 +407,8 @@ end
 
 
 
-knightJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
-	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
+knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
+ 	       Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
 
 function getMovesForPiece(piece::Knight, color::Color, board::ChessBoard, coord::Coord)
     movesFromJumps(board, coord, knightJumps, false)

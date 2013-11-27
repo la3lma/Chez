@@ -7,7 +7,8 @@ TODO
 ====
 
  o Clean up and modularize code better.
- o Nicer printouts of movemeents.
+ o Nicer printouts of movements.
+ o Add named/keyword parameters for capture required
  o Add movement generation for all pieces.
 
  o Board evaluator
