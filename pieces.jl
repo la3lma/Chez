@@ -313,14 +313,14 @@ end
 knightJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
 	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
 
-function getMovesForPiece(piece::Knight, board::ChessBoard, coord::Coord)
+function getMovesForPiece(piece::Knight, color::Color, board::ChessBoard, coord::Coord)
     movesFromJumps(board, coord, knightJumps, false)
 end
 
 
 # this test shouldn't depend on the order of items in the list, it should treat
 # this as a test for collection equality
-@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
+@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == getMovesForPiece(wk.piecetype, white,  startingBoard, b1)
 
 # Rooks, kings, bishops are all made up by
 # rays and filtering.
@@ -386,7 +386,6 @@ end
 # XXX Parameters for getMovesForPiece are screwed up.
 @test 2 == length(getMovesForPiece(pawn,   white, startingBoard, a2))
 @test 2 == length(getMovesForPiece(knight, white, startingBoard, b1))
-
 
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
