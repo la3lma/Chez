@@ -107,6 +107,13 @@ type Coord
     y:: Int64
 end
 
+# Expand this to all coordinates for convenience
+b1=Coord(2,1)
+a2=Coord(1,2)
+a3=Coord(1,3)
+c3=Coord(3,3)
+c2=Coord(3,2)
+
 
 # Coordinates are linar, so we must define addition and multiplication
 # with numbers
@@ -283,31 +290,30 @@ end
 
 
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
-    map(j -> 
-	  moveFromJump(board, start, j, requireCaptures),
-        jumps)
+#    map(j -> 
+#	  moveFromJump(board, start, j, requireCaptures),
+#        jumps)
+    #  XXX I don't understand why the code above fails and the code below works.
+    result = []
+    for j in jumps
+       move = moveFromJump(board, start, j, requireCaptures)
+       if (move != null)
+           result = [result..., move]
+       end
+    end
+    return result
 end
 
-@test [ Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))] == movesFromJumps(startingBoard, Coord(1,2),[Coord(0,1)], false)
-
-function movesFromRay(board, coord, ray, requireCaptures)
-    return []
-end
+@test [ Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))]   == movesFromJumps(startingBoard, Coord(1,2),[Coord(0,1)], false)
 
 
-rookJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
+knightJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
 	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
 
 function getMovesForPiece(piece::Knight, board::ChessBoard, coord::Coord)
-    movesFromJumps(board, coord, rookJumps, false)
+    movesFromJumps(board, coord, knightJumps, false)
 end
 
-# Expand this to all coordinates for convenience
-b1=Coord(2,1)
-a2=Coord(1,2)
-a3=Coord(1,3)
-c3=Coord(3,3)
-c2=Coord(3,2)
 
 @test [Move(b1, a3, false, wk), Move(b1, c3, false, wk)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
 
