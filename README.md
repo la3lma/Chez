@@ -6,8 +6,10 @@ A little finger exercise to get a feel for julia, may also contain elements of a
 TODO
 ====
 
- o Movement generator (something that from a game position generates possible moves by a player).
-   o Movement representation
+ o Clean up and modularize code better.
+ o Nicer printouts of movemeents.
+ o Add movement generation for all pieces.
+
  o Board evaluator
  o Game mechanics
   o Consider using http://chessboardjs.com/docs to add som real chessboard action.
