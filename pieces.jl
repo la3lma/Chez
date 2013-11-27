@@ -146,13 +146,80 @@ function show(io::IO, m::Coord)
 end
 
 
-# Expand this to all coordinates for convenience
-b1=Coord(2,1)
+## All coordinates, expanded for convenience
+a1=Coord(1,1)
 a2=Coord(1,2)
 a3=Coord(1,3)
-b2=Coord(2,1)
-c3=Coord(3,3)
+a4=Coord(1,4)
+a5=Coord(1,5)
+a6=Coord(1,6)
+a7=Coord(1,7)
+a8=Coord(1,8)
+
+b1=Coord(2,1)
+b2=Coord(2,2)
+b3=Coord(2,3)
+b4=Coord(2,4)
+b5=Coord(2,5)
+b6=Coord(2,6)
+b7=Coord(2,7)
+b8=Coord(2,8)
+
+
+c1=Coord(3,1)
 c2=Coord(3,2)
+c3=Coord(3,3)
+c4=Coord(3,4)
+c5=Coord(3,5)
+c6=Coord(3,6)
+c7=Coord(3,7)
+c8=Coord(3,8)
+
+d1=Coord(4,1)
+d2=Coord(4,2)
+d3=Coord(4,3)
+d4=Coord(4,4)
+d5=Coord(4,5)
+d6=Coord(4,6)
+d7=Coord(4,7)
+d8=Coord(4,8)
+
+e1=Coord(5,1)
+e2=Coord(5,2)
+e3=Coord(5,3)
+e4=Coord(5,4)
+e5=Coord(5,5)
+e6=Coord(5,6)
+e7=Coord(5,7)
+e8=Coord(5,8)
+
+f1=Coord(6,1)
+f2=Coord(6,2)
+f3=Coord(6,3)
+f4=Coord(6,4)
+f5=Coord(6,5)
+f6=Coord(6,6)
+f7=Coord(6,7)
+f8=Coord(6,8)
+
+g1=Coord(7,1)
+g2=Coord(7,2)
+g3=Coord(7,3)
+g4=Coord(7,4)
+g5=Coord(7,5)
+g6=Coord(7,6)
+g7=Coord(7,7)
+g8=Coord(7,8)
+
+h1=Coord(8,1)
+h2=Coord(8,2)
+h3=Coord(8,3)
+h4=Coord(8,4)
+h5=Coord(8,5)
+h6=Coord(8,6)
+h7=Coord(8,7)
+h8=Coord(8,8)
+
 
 
 # Coordinates are linar, so we must define addition and multiplication
