@@ -17,12 +17,11 @@ type Color
 end
 
 function ==(c1::Color, c2::Color)
-	c1.name == c2.name && c1.shortName == c2.shortName
+   c1.name == c2.name && c1.shortName == c2.shortName
 end
 
 @test Color("a","b") == Color("a", "b")
 @test Color("a","b") != Color("b", "a")
-
 
 black       = Color("Black", "b");
 white       = Color("White", "w");
@@ -35,7 +34,6 @@ transparent = Color("Blank", " ");
 @test black == black
 @test black != white
 @test black != transparent
-
 
 abstract PieceType
 type Pawn   <: PieceType end
@@ -82,13 +80,30 @@ wki = ChessPiece(white, king,  "k");
 
 bs = ChessPiece(transparent, blank,  " ");
 
+## Printing pieces
+show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
+
+
 type ChessBoard
    # This must be an 8x8 matrice. That fact shoul
    # be a constraint somewhere
    board::Array{ChessPiece}
 end
 
+## Printing chessboards
+function show(io::IO, cb::ChessBoard)
+ for y1 = 1:8
+  y = 9 - y1;
+  print(io, y)
+   for x = 1:8
+       @printf(io, "%s",  cb.board[y, x].printrep)
+   end
+   println(io, y)
+ end
+end
 
+
+# Constructing an initial chessboard
 startingBoardArray = [
   wr wk wb wq wki wb wk wr;
   wp wp wp wp wp  wp wp wp;
@@ -106,7 +121,6 @@ type Coord
     x:: Int64 # Should be Uint8!
     y:: Int64
 end
-
 
 function intToChessLetter(i::Integer)
     # This cries out for using a table etc.
@@ -135,16 +149,16 @@ end
 @test intToChessLetter(8) == "h"
 @test intToChessLetter(81) == "X"
 
-
-# # Printing coordds
+## Printing a coordinate
 function show(io::IO, m::Coord)
+   # If it's a valid coordinate, use chess notation
    if (isValidCoord(m))
       @printf(io, "%s%d", intToChessLetter(m.x), m.y)
    else
+      # If not then use coordinate notation. 
       @printf(io, "Coord(%d, %d)", m.x, m.y)
    end
 end
-
 
 ## All coordinates, expanded for convenience
 a1=Coord(1,1)
@@ -221,9 +235,8 @@ h7=Coord(8,7)
 h8=Coord(8,8)
 
 
-
-# Coordinates are linar, so we must define addition and multiplication
-# with numbers
+# Coordinates are linear, so we must define addition of coordinates
+# and and multiplication of coordinates with numbers.
 
 +(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c2.y)
 *(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
@@ -231,8 +244,10 @@ h8=Coord(8,8)
 ==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
 
 @test Coord(3,3) == Coord(1,1) + Coord(2,2)
+@test Coord(4,4) ==  2 * Coord(2,2)
 
-
+# For the chessboard only ordinates in the range [1..8] are
+# valid, so we add some predicates to test for that 
 isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 
 @test !isValidOrdinate(0)
@@ -240,9 +255,8 @@ isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 @test  isValidOrdinate(8)
 @test !isValidOrdinate(9)
 
-function isValidCoord(coord::Coord)
-    return isValidOrdinate(coord.x) &&
-           isValidOrdinate(coord.y)
+function isValidCoord(coord::Coord) 
+   isValidOrdinate(coord.x) && isValidOrdinate(coord.y)
 end
 
 @test isValidCoord(Coord(1,1))
@@ -251,12 +265,9 @@ end
 @test !isValidCoord(Coord(0,2))
 @test !isValidCoord(Coord(1,0))
 
-
 function getPieceAt(board::ChessBoard, coord::Coord)
     return board.board[coord.y, coord.x]
 end
-
-
 
 # Check that the coordinates are not messed up
 @test getPieceAt(startingBoard, Coord(1,1)) == wr
@@ -265,31 +276,9 @@ end
 @test getPieceAt(startingBoard, Coord(4,1)) == wq
 @test getPieceAt(startingBoard, Coord(4,2)) == wp
 
-
-## XXX This is a very inefficient representation.  Can
- ##     we do better?
-
-## Printing pieces
-show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
-
-## Printing chessboards
-function show(io::IO, cb::ChessBoard)
- for y1 = 1:8
-  y = 9 - y1;
-  print(io, y)
-   for x = 1:8
-       @printf(io, "%s",  cb.board[y, x].printrep)
-   end
-   println(io, y)
- end
-end
-
-
 ##
 ##  Representing movement
 ##
-
-
 
 function allCoords()
     result = Coord[]
@@ -304,27 +293,24 @@ coords = allCoords()
 
 @test 64 == length(coords)
 
-
-
-
 # Get coordinates for all the pieces of a particular
 # color
 function getCoordsForPieces(color::Color, board::ChessBoard)
    return filter(c -> (getPieceAt(board, c).color == color), coords)
 end
 
+# Representing moves
 
 type Move
     start:: Coord
     destination:: Coord
-    capture:: Bool
+    capture:: Bool # XXX Redundant!
     startPiece:: ChessPiece
     destinationPiece:: ChessPiece
 end
 
 # Take a look at http://en.wikipedia.org/wiki/Chess_notation, print moves
-# in an orderly algebraic or long algebraic manner.
-
+# in an orderly proficient algebraic or long algebraic manner.
 
 function ==(m1::Move, m2::Move)
      return (m1.start == m2.start) &&
@@ -334,11 +320,6 @@ function ==(m1::Move, m2::Move)
 	    (m1.destinationPiece == m2.destinationPiece)
 end
 
-
-function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
-  # To be improved on
-  []
-end
 
 function validMoves(moves::Array{Move, 1})
      filter(m -> isValidCoord(m.destination), moves)
@@ -393,6 +374,34 @@ end
 
 @test [ Move(a2, a3, false, wp, bs)]   == movesFromJumps(startingBoard, a2,[Coord(0,1)], false)
 
+function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
+function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
+  []  # Arguably, this should throw an exception instead, or return null.
+end
+
+
+# Rooks, kings, bishops are all made up by
+# rays and filtering.
+
+
+function getMovesForPiece(piece::King, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
+
+function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
+
+function getMovesForPiece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
+
 
 knightJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
 	     Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
@@ -406,12 +415,6 @@ end
 # this as a test for collection equality
 @test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == getMovesForPiece(wk.piecetype, white,  startingBoard, b1)
 
-# Rooks, kings, bishops are all made up by
-# rays and filtering.
-
-function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
-  []
-end
 
 function pawnStartLine(color::Color)
    if (color == black)
