@@ -468,7 +468,6 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   return moves
 end
 
-# XXX Parameters for getMovesForPiece are screwed up.
 @test 2 == length(getMovesForPiece(pawn,   white, startingBoard, a2))
 @test 2 == length(getMovesForPiece(knight, white, startingBoard, b1))
 
