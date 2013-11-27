@@ -68,14 +68,14 @@ end
 
 bp  = ChessPiece(black, pawn,  "P");
 br  = ChessPiece(black, rook,  "R");
-bk  = ChessPiece(black, knight,"T")
+bk  = ChessPiece(black, knight,"g")
 bb  = ChessPiece(black, bishop,"B");
 bq  = ChessPiece(black, queen, "Q");
 bki = ChessPiece(black, king,  "K");
 
 wp  = ChessPiece(white, pawn,  "p");
 wr  = ChessPiece(white, rook,  "r");
-wk  = ChessPiece(white, knight,"t")
+wk  = ChessPiece(white, knight,"g")
 wb  = ChessPiece(white, bishop,"b");
 wq  = ChessPiece(white, queen, "q");
 wki = ChessPiece(white, king,  "k");
@@ -90,14 +90,14 @@ end
 
 
 startingBoardArray = [
-  wr wk wb wq wk wb wk wr;
-  wp wp wp wp wp wp wp wp;
-  bs bs bs bs bs bs bs bs;
-  bs bs bs bs bs bs bs bs;
-  bs bs bs bs bs bs bs bs;
-  bs bs bs bs bs bs bs bs;
-  bp bp bp bp bp bp bp bp;
-  br bk bb bq bk bb bk br;
+  wr wk wb wq wki wb wk wr;
+  wp wp wp wp wp  wp wp wp;
+  bs bs bs bs bs  bs bs bs;
+  bs bs bs bs bs  bs bs bs;
+  bs bs bs bs bs  bs bs bs;
+  bs bs bs bs bs  bs bs bs;
+  bp bp bp bp bp  bp bp bp;
+  br bk bb bq bki bb bk br;
 ];
 
 startingBoard = ChessBoard(startingBoardArray)
@@ -155,7 +155,7 @@ end
 # Check that the coordinates are not messed up
 @test getPieceAt(startingBoard, Coord(1,1)) == wr
 @test getPieceAt(startingBoard, Coord(2,1)) == wk
-@test getPieceAt(startingBoard, Coord(5,1)) == wk
+@test getPieceAt(startingBoard, Coord(5,1)) == wki
 @test getPieceAt(startingBoard, Coord(4,1)) == wq
 @test getPieceAt(startingBoard, Coord(4,2)) == wp
 
