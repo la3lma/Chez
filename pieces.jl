@@ -391,6 +391,10 @@ function getMovesForPiece(piece::King, color::Color,  board::ChessBoard, coord::
   []
 end
 
+function getMovesForPiece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord)
+  []
+end
+
 
 function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord)
   []
