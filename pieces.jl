@@ -108,7 +108,7 @@ type Coord
 end
 
 
-function intToChessLetter(i::Integer) 
+function intToChessLetter(i::Integer)
     # This cries out for using a table etc.
     if (i == 1)
         return "a"
@@ -126,7 +126,7 @@ function intToChessLetter(i::Integer)
         return "g"
     elseif (i == 8)
         return "h"
-    else 
+    else
         return "X"
     end
 end
@@ -173,7 +173,7 @@ isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 @test  isValidOrdinate(8)
 @test !isValidOrdinate(9)
 
-function isValidCoord(coord::Coord) 
+function isValidCoord(coord::Coord)
     return isValidOrdinate(coord.x) &&
            isValidOrdinate(coord.y)
 end
@@ -185,7 +185,7 @@ end
 @test !isValidCoord(Coord(1,0))
 
 
-function getPieceAt(board::ChessBoard, coord::Coord) 
+function getPieceAt(board::ChessBoard, coord::Coord)
     return board.board[coord.y, coord.x]
 end
 
@@ -265,7 +265,7 @@ function ==(m1::Move, m2::Move)
 	    (m1.capture == m2.capture) &&
 	    (m1.startPiece == m2.startPiece) &&
 	    (m1.destinationPiece == m2.destinationPiece)
-end 
+end
 
 
 function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
@@ -280,7 +280,7 @@ end
 
 function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptures::Bool)
     destination = start + jump
- 
+
     if (!isValidCoord(destination))
         return null
      end
@@ -292,7 +292,7 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptu
      isLegalMove = destinationPiece.color != startPiece.color
      isCapture = isLegalMove && (destinationPiece.color != transparent)
 
-     if (!isLegalMove) 
+     if (!isLegalMove)
         return null
      elseif (requireCaptures)
           if (isCapture)
@@ -310,7 +310,7 @@ end
 
 
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
-#    map(j -> 
+#    map(j ->
 #	  moveFromJump(board, start, j, requireCaptures),
 #        jumps)
     #  XXX I don't understand why the code above fails and the code below works.
@@ -366,16 +366,16 @@ end
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
   # First we establish a jump speed that is color dependent
   # (for pawns only)
-  if (color == white) 
+  if (color == white)
      speed = 1
   else
      speed = -1
   end
-  
+
   # Then we establish a single non-capturing movement ray
   if  (coord.y == pawnStartLine(color))
      ncray = [Coord(0,speed), 2 * Coord(0, speed)]
-  else 
+  else
      ncray = [Coord(0,speed)]
   end
 
@@ -387,7 +387,7 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   moves = union([movesFromJumps(board, coord, ncray, false),
     		 movesFromJumps(board, coord, captureJumps, true)])
   moves = filter(m -> m != null, moves) #Kludge
-  
+
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
   for move in moves
@@ -411,7 +411,7 @@ flatten(a)=a
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-	    flatten( union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
+	    flatten( union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
                 for c=getCoordsForPieces(color,startingBoard)
          }))
 end
