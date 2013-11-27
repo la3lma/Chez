@@ -107,6 +107,45 @@ type Coord
     y:: Int64
 end
 
+
+function intToChessLetter(i::Integer) 
+    # This cries out for using a table etc.
+    if (i == 1)
+        return "a"
+    elseif (i == 2)
+        return "b"
+    elseif (i == 3)
+        return "c"
+    elseif (i == 4)
+        return "d"
+    elseif (i == 5)
+        return "e"
+    elseif (i == 6)
+        return "f"
+    elseif (i == 7)
+        return "g"
+    elseif (i == 8)
+        return "h"
+    else 
+        return "X"
+    end
+end
+
+@test intToChessLetter(1) == "a"
+@test intToChessLetter(8) == "h"
+@test intToChessLetter(81) == "X"
+
+
+# # Printing coordds
+function show(io::IO, m::Coord)
+   if (isValidCoord(m))
+      @printf(io, "%s%d", intToChessLetter(m.x), m.y)
+   else
+      @printf(io, "Coord(%d, %d)", m.x, m.y)
+   end
+end
+
+
 # Expand this to all coordinates for convenience
 b1=Coord(2,1)
 a2=Coord(1,2)
@@ -216,6 +255,10 @@ type Move
     destinationPiece:: ChessPiece
 end
 
+# Take a look at http://en.wikipedia.org/wiki/Chess_notation, print moves
+# in an orderly algebraic or long algebraic manner.
+
+
 function ==(m1::Move, m2::Move)
      return (m1.start == m2.start) &&
             (m1.destination == m2.destination) &&
@@ -223,6 +266,7 @@ function ==(m1::Move, m2::Move)
 	    (m1.startPiece == m2.startPiece) &&
 	    (m1.destinationPiece == m2.destinationPiece)
 end 
+
 
 function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
   # To be improved on
@@ -235,14 +279,8 @@ end
 
 
 function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptures::Bool)
-     destination = start + jump
+    destination = start + jump
  
-
-     println("start = ")
-     println(start)
-     println("destination = ")
-     println(destination)
-
     if (!isValidCoord(destination))
         return null
      end
@@ -251,29 +289,8 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptu
      destinationPiece = getPieceAt(board, destination)
      startPiece = getPieceAt(board, start)
 
-     println("destinationPiece = ")
-     println(destinationPiece)
-
-     println("startPiece = ")
-     println(startPiece)
-
-     println("startPiece.color = ")
-     println(startPiece.color)
-
-     println("destinationPiece.color = ")
-     println(destinationPiece.color)
-
-
      isLegalMove = destinationPiece.color != startPiece.color
      isCapture = isLegalMove && (destinationPiece.color != transparent)
-
-
-     println("isCapture = ")
-     println(isCapture)
-
-     println("isLegalMove = ")
-     println(isLegalMove)
-
 
      if (!isLegalMove) 
         return null
@@ -374,8 +391,6 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
   for move in moves
-      println("Move = ")
-      println(move)
       if (move.destination.y == finishLine(color))
 	 move.piece = queenOfColor(color)
       end
@@ -400,7 +415,6 @@ function getMoves(color::Color, board::ChessBoard)
                 for c=getCoordsForPieces(color,startingBoard)
          }))
 end
-
 
 # All the opening moves for pawns
 @test 20 == length(getMoves(white, startingBoard))
