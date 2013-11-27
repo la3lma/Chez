@@ -387,17 +387,22 @@ end
 @test 2 == length(getMovesForPiece(pawn,   white, startingBoard, a2))
 @test 2 == length(getMovesForPiece(knight, white, startingBoard, b1))
 
+# From the intertubes
+flatten{T}(a::Array{T,1}) = any(map(x->isa(x,Array),a))? flatten(vcat(map(flatten,a)...)): a
+flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
+flatten(a)=a
+
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-	     union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
-                for c=getCoordsForPieces(black,startingBoard)
-         })
+	    flatten( union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c) 
+                for c=getCoordsForPieces(color,startingBoard)
+         }))
 end
 
 
 # All the opening moves for pawns
-@test 24 == length(getMoves(white, startingBoard))
-@test 24 == length(getMoves(black, startingBoard))
+@test 20 == length(getMoves(white, startingBoard))
+@test 20 == length(getMoves(black, startingBoard))
 
