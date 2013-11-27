@@ -111,6 +111,7 @@ end
 b1=Coord(2,1)
 a2=Coord(1,2)
 a3=Coord(1,3)
+b2=Coord(2,1)
 c3=Coord(3,3)
 c2=Coord(3,2)
 
@@ -211,14 +212,16 @@ type Move
     start:: Coord
     destination:: Coord
     capture:: Bool
-    piece:: ChessPiece
+    startPiece:: ChessPiece
+    destinationPiece:: ChessPiece
 end
 
 function ==(m1::Move, m2::Move)
      return (m1.start == m2.start) &&
             (m1.destination == m2.destination) &&
 	    (m1.capture == m2.capture) &&
-	    (m1.piece == m2.piece)
+	    (m1.startPiece == m2.startPiece) &&
+	    (m1.destinationPiece == m2.destinationPiece)
 end 
 
 function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
@@ -276,17 +279,17 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptu
         return null
      elseif (requireCaptures)
           if (isCapture)
-	    return Move(start, destination, isCapture, destinationPiece)
+	    return Move(start, destination, isCapture, startPiece, destinationPiece)
 	  else
 	    return null
           end
      else
-          return Move(start, destination, isCapture, destinationPiece)
+          return Move(start, destination, isCapture, startPiece, destinationPiece)
      end
 end
 
 # Test movement of a single pawn
-@test Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3))) == moveFromJump(startingBoard, Coord(1,2), Coord(0,1), false)
+@test Move(a2, a3, false, wp, bs) == moveFromJump(startingBoard, a2, Coord(0,1), false)
 
 
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
@@ -304,7 +307,7 @@ function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, 
     return result
 end
 
-@test [ Move(Coord(1,2), Coord(1,3), false, getPieceAt(startingBoard, Coord(1,3)))]   == movesFromJumps(startingBoard, Coord(1,2),[Coord(0,1)], false)
+@test [ Move(a2, a3, false, wp, bs)]   == movesFromJumps(startingBoard, a2,[Coord(0,1)], false)
 
 
 knightJumps = [Coord(-2, 1), Coord(2, 1), Coord(1, 2),  Coord(-1, 2),
@@ -315,10 +318,12 @@ function getMovesForPiece(piece::Knight, board::ChessBoard, coord::Coord)
 end
 
 
-@test [Move(b1, a3, false, wk), Move(b1, c3, false, wk)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
+# this test shouldn't depend on the order of items in the list, it should treat
+# this as a test for collection equality
+@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == getMovesForPiece(wk.piecetype, startingBoard, b1)
 
-# Towers, kings, bishops are all made up by
-# raysand filtering.
+# Rooks, kings, bishops are all made up by
+# rays and filtering.
 
 function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
   []
@@ -378,8 +383,9 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   return moves
 end
 
-@test 2 == length(getMovesForPiece(pawn, white, startingBoard, Coord(1,2)))
-@test 4 == length(getMovesForPiece(rook, white, startingBoard, Coord(2,1)))
+# XXX Parameters for getMovesForPiece are screwed up.
+@test 2 == length(getMovesForPiece(pawn,   white, startingBoard, a2))
+@test 2 == length(getMovesForPiece(knight, white, startingBoard, b1))
 
 
 # From a chessboard, extract all the possible moves for all
