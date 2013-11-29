@@ -326,7 +326,7 @@ function validMoves(moves::Array{Move, 1})
 end
 
 
-function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptures::Bool)
+function moveFromJump(board::ChessBoard, start::Coord, jump::Coord; requireCaptures::Bool = false)
     destination = start + jump
 
     if (!isValidCoord(destination))
@@ -354,17 +354,17 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord, requireCaptu
 end
 
 # Test movement of a single pawn
-@test Move(a2, a3, false, wp, bs) == moveFromJump(startingBoard, a2, Coord(0,1), false)
+@test Move(a2, a3, false, wp, bs) == moveFromJump(startingBoard, a2, Coord(0,1))
 
 
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
 #    map(j ->
-#	  moveFromJump(board, start, j, requireCaptures),
+#	  moveFromJump(board, start, j, requireCaptures = requireCaptures),
 #        jumps)
     #  XXX I don't understand why the code above fails and the code below works.
     result = []
     for j in jumps
-       move = moveFromJump(board, start, j, requireCaptures)
+       move = moveFromJump(board, start, j; requireCaptures = requireCaptures)
        if (move != null)
            result = [result..., move]
        end
