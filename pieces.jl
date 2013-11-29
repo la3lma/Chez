@@ -382,29 +382,50 @@ function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
 end
 
 
+
+
+
 # Rooks, kings, bishops are all made up by
 # rays and filtering.
 
 
-function getMovesForPiece(piece::King, color::Color,  board::ChessBoard, coord::Coord)
-  []
+function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
+    []
 end
 
-function getMovesForPiece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord)
-  []
-end
-
-
-function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord)
-  []
-end
-
+bishopRayGenerators = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
 
 function getMovesForPiece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord)
-  []
+	 getMovesFromRays(bishopRayGenerators, color, board, coord)
+end
+
+rookRayGenerators = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 0)]
+
+function getMovesForPiece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord)
+	 getMovesFromRays(rookRayGenerators, color, board, coord)
 end
 
 
+function getRoyalMoves(color::Color,  board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
+   flatten([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly), 
+            getMovesFromRays(rookRayGenerators, color, board, coord; oneStepOnly = oneStepOnly)])
+end
+
+function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord)
+   getRoyalMoves(color, board, coord; oneStepOnly=false)
+end
+
+# XXX Return true iff the move represents a legal move for a king
+#     (don't get too close to a king on the board essentially, check 
+#      detection is not implemented at this level).
+function islegalKingMove(move::Move, board::ChessBoard) 
+  false
+end
+
+function getMovesForPiece(piece::King, color::Color,  board::ChessBoard, coord::Coord)
+   moves = getRoyalMoves(color, board, coord; oneStepOnly=true)
+   filter(m->isLegalKingMove(m, board), moves)
+end
 
 knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
  	       Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
@@ -419,31 +440,14 @@ end
 @test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == getMovesForPiece(wk.piecetype, white,  startingBoard, b1)
 
 
-function pawnStartLine(color::Color)
-   if (color == black)
-     return 7
-   else
-     return 2
-   end
-end
-
-function finishLine(color::Color)
-    if (color == black)
-        return 1
-    else
-        return 8
-    end
-end
+pawnStartLine(color::Color) =  (color == black) ? 7 : 2
+finishLine(color::Color)    =  (color == black) ? 1 : 8
 
 
 function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
   # First we establish a jump speed that is color dependent
   # (for pawns only)
-  if (color == white)
-     speed = 1
-  else
-     speed = -1
-  end
+  speed = (color == white) ? 1 : -1
 
   # Then we establish a single non-capturing movement ray
   if  (coord.y == pawnStartLine(color))
