@@ -333,7 +333,6 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord; requireCaptu
         return null
      end
 
-
      destinationPiece = getPieceAt(board, destination)
      startPiece = getPieceAt(board, start)
 
@@ -458,6 +457,7 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
 
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
+  # XXX Just use flatten instead?
   moves = union([movesFromJumps(board, coord, ncray, false),
     		 movesFromJumps(board, coord, captureJumps, true)])
   moves = filter(m -> m != null, moves) #Kludge
