@@ -185,7 +185,6 @@ b6=Coord(2,6)
 b7=Coord(2,7)
 b8=Coord(2,8)
 
-
 c1=Coord(3,1)
 c2=Coord(3,2)
 c3=Coord(3,3)
@@ -389,14 +388,34 @@ end
 
 
 
-
-
 # Rooks, kings, bishops are all made up by
 # rays and filtering.
 
+function getMovesFromRay(generator::Coord, color::Color, board::ChessBoard, start::Coord, oneStepOnly::Bool)
+    local destination = start + generator
+    local result = []
+    local capture=false
+    local startPiece = getPieceAt(board, start)
+    while (isValidCoord(destination) && !capture)
+        local destinationPiece = getPieceAt(board, destination)
+	if (destinationPiece.color == startPiece.color)
+          break
+        end
+	capture = (bs != destinationPiece)
+        local move = Move(start, destination, capture, startPiece, destinationPiece)
+	result = [result ..., move]
+        destination = destination + generator;
+    end
+    return result
+end
 
 function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-    []
+   # XXX This really -should- be using a "map" construct.	 
+   local result = []
+   for gen in generators
+     result [result ..., getMovesFromRay(gen, color, board, coord, oneStepOnly)]
+   end
+   return result
 end
 
 bishopRayGenerators = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
