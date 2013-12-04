@@ -121,6 +121,7 @@ startingBoardArray = [
   br bk bb bq bki bb bk br;
 ];
 
+
 startingBoard = ChessBoard(startingBoardArray)
 
 type Coord
@@ -391,7 +392,12 @@ end
 # Rooks, kings, bishops are all made up by
 # rays and filtering.
 
-function getMovesFromRay(generator::Coord, color::Color, board::ChessBoard, start::Coord, oneStepOnly::Bool)
+function getMovesFromRay(
+	 generator::Coord, 
+	 color::Color, 
+	 board::ChessBoard, 
+	 start::Coord,
+	 oneStepOnly::Bool)
     local destination = start + generator
     local result = []
     local capture=false
@@ -404,7 +410,11 @@ function getMovesFromRay(generator::Coord, color::Color, board::ChessBoard, star
 	capture = (bs != destinationPiece)
         local move = Move(start, destination, capture, startPiece, destinationPiece)
 	result = [result ..., move]
-        destination = destination + generator;
+	if (!oneStepOnly) 
+	   destination +=  generator;
+        else
+           break
+        end
     end
     return result
 end
