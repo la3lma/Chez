@@ -11,7 +11,7 @@
 import Base.show
 using  Base.Test
 
-# From the intertubes
+# A flatten method from the internets
 flatten{T}(a::Array{T,1}) = any(map(x->isa(x,Array),a))? flatten(vcat(map(flatten,a)...)): a
 flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
 flatten(a)=a
@@ -261,6 +261,7 @@ isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 @test  isValidOrdinate(8)
 @test !isValidOrdinate(9)
 
+# A coordinate is valid only when its ordinates are
 function isValidCoord(coord::Coord) 
    isValidOrdinate(coord.x) && isValidOrdinate(coord.y)
 end
@@ -306,7 +307,6 @@ function getCoordsForPieces(color::Color, board::ChessBoard)
 end
 
 # Representing moves
-
 type Move
     start:: Coord
     destination:: Coord
@@ -524,7 +524,7 @@ function getMoves(color::Color, board::ChessBoard)
          }))
 end
 
-# All the opening moves for pawns
+# All the opening moves for pawns and horses
 @test 20 == length(getMoves(white, startingBoard))
 @test 20 == length(getMoves(black, startingBoard))
 
