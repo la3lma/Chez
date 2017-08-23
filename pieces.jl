@@ -7,9 +7,12 @@
 ## just to get a feel for it. Playing strength of the chess
 ## program is not something I'm very interested in :-)
 ##
+## To print chess symbols in unicode.
+## https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode
 
 import Base.show
 using  Base.Test
+
 
 # A flatten method from the internets
 flatten{T}(a::Array{T,1}) = any(map(x->isa(x,Array),a))? flatten(vcat(map(flatten,a)...)): a
@@ -62,6 +65,7 @@ type ChessPiece
   color:: Color
   piecetype:: PieceType
   printrep:: String
+  unicode:: String
 end
 
 function ==(cp1::ChessPiece, cp2::ChessPiece)
@@ -70,19 +74,19 @@ function ==(cp1::ChessPiece, cp2::ChessPiece)
 	 (cp1.printrep == cp2.printrep)
 end
 
-bp  = ChessPiece(black, pawn,  "P");
-br  = ChessPiece(black, rook,  "R");
-bk  = ChessPiece(black, knight,"g")
-bb  = ChessPiece(black, bishop,"B");
-bq  = ChessPiece(black, queen, "Q");
-bki = ChessPiece(black, king,  "K");
+bp  = ChessPiece(black, pawn,  "P", "♟");
+br  = ChessPiece(black, rook,  "R", "♜);
+bk  = ChessPiece(black, knight,"g", "♞")
+bb  = ChessPiece(black, bishop,"B", "♝");
+bq  = ChessPiece(black, queen, "Q", "♛");
+bki = ChessPiece(black, king,  "K", "♚");
 
-wp  = ChessPiece(white, pawn,  "p");
-wr  = ChessPiece(white, rook,  "r");
-wk  = ChessPiece(white, knight,"g")
-wb  = ChessPiece(white, bishop,"b");
-wq  = ChessPiece(white, queen, "q");
-wki = ChessPiece(white, king,  "k");
+wp  = ChessPiece(white, pawn,  "p", "♙");
+wr  = ChessPiece(white, rook,  "r", "♖");
+wk  = ChessPiece(white, knight,"g", "♘")
+wb  = ChessPiece(white, bishop,"b", "♗");
+wq  = ChessPiece(white, queen, "q", "♕");
+wki = ChessPiece(white, king,  "k", "♔");
 
 bs = ChessPiece(transparent, blank,  " ");
 
@@ -162,7 +166,7 @@ function show(io::IO, m::Coord)
    if (isValidCoord(m))
       @printf(io, "%s%d", intToChessLetter(m.x), m.y)
    else
-      # If not then use coordinate notation. 
+      # If not then use coordinate notation.
       @printf(io, "Coord(%d, %d)", m.x, m.y)
    end
 end
@@ -253,7 +257,7 @@ h8=Coord(8,8)
 @test Coord(4,4) ==  2 * Coord(2,2)
 
 # For the chessboard only ordinates in the range [1..8] are
-# valid, so we add some predicates to test for that 
+# valid, so we add some predicates to test for that
 isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 
 @test !isValidOrdinate(0)
@@ -262,7 +266,7 @@ isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 @test !isValidOrdinate(9)
 
 # A coordinate is valid only when its ordinates are
-function isValidCoord(coord::Coord) 
+function isValidCoord(coord::Coord)
    isValidOrdinate(coord.x) && isValidOrdinate(coord.y)
 end
 
@@ -393,9 +397,9 @@ end
 # rays and filtering.
 
 function getMovesFromRay(
-	 generator::Coord, 
-	 color::Color, 
-	 board::ChessBoard, 
+	 generator::Coord,
+	 color::Color,
+	 board::ChessBoard,
 	 start::Coord,
 	 oneStepOnly::Bool)
     local destination = start + generator
@@ -410,7 +414,7 @@ function getMovesFromRay(
 	capture = (bs != destinationPiece)
         local move = Move(start, destination, capture, startPiece, destinationPiece)
 	result = [result ..., move]
-	if (!oneStepOnly) 
+	if (!oneStepOnly)
 	   destination +=  generator;
         else
            break
@@ -420,7 +424,7 @@ function getMovesFromRay(
 end
 
 function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-   # XXX This really -should- be using a "map" construct.	 
+   # XXX This really -should- be using a "map" construct.
    local result = []
    for gen in generators
      result [result ..., getMovesFromRay(gen, color, board, coord, oneStepOnly)]
@@ -442,7 +446,7 @@ end
 
 
 function getRoyalMoves(color::Color,  board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-   flatten([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly), 
+   flatten([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly),
             getMovesFromRays(rookRayGenerators, color, board, coord; oneStepOnly = oneStepOnly)])
 end
 
@@ -451,9 +455,9 @@ function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord:
 end
 
 # XXX Return true iff the move represents a legal move for a king
-#     (don't get too close to a king on the board essentially, check 
+#     (don't get too close to a king on the board essentially, check
 #      detection is not implemented at this level).
-function islegalKingMove(move::Move, board::ChessBoard) 
+function islegalKingMove(move::Move, board::ChessBoard)
   false
 end
 
@@ -527,4 +531,3 @@ end
 # All the opening moves for pawns and horses
 @test 20 == length(getMoves(white, startingBoard))
 @test 20 == length(getMoves(black, startingBoard))
-
