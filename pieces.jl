@@ -26,7 +26,7 @@ type Color
 end
 
 function ==(c1::Color, c2::Color)
-   c1.name == c2.name && c1.shortName == c2.shortName
+   isequal(c1.name, c2.name) && isequal(c1.shortName, c2.shortName)
 end
 
 @test Color("a","b") == Color("a", "b")
@@ -44,7 +44,7 @@ transparent = Color("Blank", " ");
 @test black != white
 @test black != transparent
 
-abstract PieceType
+abstract type PieceType end
 type Pawn   <: PieceType end
 type Rook   <: PieceType end
 type Knight <: PieceType end
@@ -74,21 +74,21 @@ function ==(cp1::ChessPiece, cp2::ChessPiece)
 	 (cp1.printrep == cp2.printrep)
 end
 
-bp  = ChessPiece(black, pawn,  "P", "♟");
-br  = ChessPiece(black, rook,  "R", "♜);
-bk  = ChessPiece(black, knight,"g", "♞")
-bb  = ChessPiece(black, bishop,"B", "♝");
-bq  = ChessPiece(black, queen, "Q", "♛");
-bki = ChessPiece(black, king,  "K", "♚");
+bp  = ChessPiece(black, pawn,   "P", "♟");
+br  = ChessPiece(black, rook,   "R", "♜");
+bk  = ChessPiece(black, knight, "G", "♞")
+bb  = ChessPiece(black, bishop, "B", "♝");
+bq  = ChessPiece(black, queen,  "Q", "♛");
+bki = ChessPiece(black, king,   "K", "♚");
 
-wp  = ChessPiece(white, pawn,  "p", "♙");
-wr  = ChessPiece(white, rook,  "r", "♖");
-wk  = ChessPiece(white, knight,"g", "♘")
-wb  = ChessPiece(white, bishop,"b", "♗");
-wq  = ChessPiece(white, queen, "q", "♕");
-wki = ChessPiece(white, king,  "k", "♔");
+wp  = ChessPiece(white, pawn,   "p", "♙");
+wr  = ChessPiece(white, rook,   "r", "♖");
+wk  = ChessPiece(white, knight, "g", "♘");
+wb  = ChessPiece(white, bishop, "b", "♗");
+wq  = ChessPiece(white, queen,  "q", "♕");
+wki = ChessPiece(white, king,   "k", "♔");
 
-bs = ChessPiece(transparent, blank,  " ");
+bs = ChessPiece(transparent, blank,  " ",  " ");
 
 ## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
