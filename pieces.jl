@@ -135,30 +135,30 @@ end
 
 function intToChessLetter(i::Integer)
     # This cries out for using a table etc.
-    if (i == 1)
+    if isequal(i, 1)
         return "a"
-    elseif (i == 2)
+    elseif isequal(i, 2)
         return "b"
-    elseif (i == 3)
+    elseif isequal(i, 3)
         return "c"
-    elseif (i == 4)
+    elseif isequal(i, 4)
         return "d"
-    elseif (i == 5)
+    elseif isequal(i, 5)
         return "e"
-    elseif (i == 6)
+    elseif isequal(i, 6)
         return "f"
-    elseif (i == 7)
+    elseif isequal(i, 7)
         return "g"
-    elseif (i == 8)
+    elseif isequal(i, 8)
         return "h"
     else
         return "X"
     end
 end
 
-@test intToChessLetter(1) == "a"
-@test intToChessLetter(8) == "h"
-@test intToChessLetter(81) == "X"
+@test isequal(intToChessLetter(1), "a")
+@test isequal(intToChessLetter(8), "h")
+@test isequal(intToChessLetter(81), "X")
 
 ## Printing a coordinate
 function show(io::IO, m::Coord)
