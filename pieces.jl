@@ -11,6 +11,9 @@
 ## https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode
 
 import Base.show
+import Base.==
+import Base.+
+import Base.*
 using  Base.Test
 
 
@@ -129,7 +132,7 @@ startingBoardArray = [
 startingBoard = ChessBoard(startingBoardArray)
 
 type Coord
-    x:: Int64 # Should be Uint8!
+    x:: Int64 # Should be Uint8 (or even Uint5 or Uint4, of they exist)
     y:: Int64
 end
 
@@ -159,6 +162,21 @@ end
 @test isequal(intToChessLetter(1), "a")
 @test isequal(intToChessLetter(8), "h")
 @test isequal(intToChessLetter(81), "X")
+
+# For the chessboard only ordinates in the range [1..8] are
+# valid, so we add some predicates to test for that
+isValidOrdinate(c::Int)  =  1 <= c && c <= 8
+
+@test !isValidOrdinate(0)
+@test  isValidOrdinate(1)
+@test  isValidOrdinate(8)
+@test !isValidOrdinate(9)
+
+# A coordinate is valid only when its ordinates are
+function isValidCoord(coord::Coord)
+   isValidOrdinate(coord.x) && isValidOrdinate(coord.y)
+end
+
 
 ## Printing a coordinate
 function show(io::IO, m::Coord)
@@ -244,31 +262,21 @@ h6=Coord(8,6)
 h7=Coord(8,7)
 h8=Coord(8,8)
 
-
-# Coordinates are linear, so we must define addition of coordinates
-# and and multiplication of coordinates with numbers.
-
+#
+# Treat the set of coordinates as a linear space.
+#
 +(c1::Coord, c2::Coord) = Coord(c1.x + c2.x, c1.y + c2.y)
 *(n::Number, c::Coord)  = Coord(n * c.x, n * c.y)
 *(c::Coord,  n::Number) = n * c
+
+#
+# Define coordinate equality
+
 ==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
 
-@test Coord(3,3) == Coord(1,1) + Coord(2,2)
+@test Coord(3,3) == (Coord(1,1) + Coord(2,2))
 @test Coord(4,4) ==  2 * Coord(2,2)
 
-# For the chessboard only ordinates in the range [1..8] are
-# valid, so we add some predicates to test for that
-isValidOrdinate(c::Int)  =  1 <= c && c <= 8
-
-@test !isValidOrdinate(0)
-@test  isValidOrdinate(1)
-@test  isValidOrdinate(8)
-@test !isValidOrdinate(9)
-
-# A coordinate is valid only when its ordinates are
-function isValidCoord(coord::Coord)
-   isValidOrdinate(coord.x) && isValidOrdinate(coord.y)
-end
 
 @test isValidCoord(Coord(1,1))
 @test isValidCoord(Coord(1,2))
