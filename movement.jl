@@ -29,10 +29,30 @@ struct Move
     capture:: Bool
     startPiece:: ChessPiece
     destinationPiece:: ChessPiece
+    # XXX Must include a field stating if it's a chess or not
 end
 
-# Take a look at http://en.wikipedia.org/wiki/Chess_notation, print moves
+# Take a look at http://en.wikipedia.org/wiki/Chess_notation, Print moves
 # in an orderly proficient algebraic or long algebraic manner.
+
+# The two implementations below are not really conformant
+
+# Standard Algebraic Notation (SAN)
+function move_as_san(m::Move)
+    capture = m.capture ? "x" : ""
+    return @sprintf("%s%s%s%s", m.startPiece.printrep, m.start, capture, m.destination)
+end
+
+# Figurine Algebraic Notation (FAN)
+function move_as_san(m::Move)
+    capture = m.capture ? "x" : ""
+    return @sprintf("%s%s%s%s", m.startPiece.unicode, m.start, capture, m.destination)
+end
+
+
+
+show(io::IO, m::Move) = show(io, move_as_san(m))
+
 
 function ==(m1::Move, m2::Move)
      return (m1.start == m2.start) &&
@@ -176,7 +196,7 @@ finishLine(color::Color)    =  (color == black) ? 1 : 8
 
 
 function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
-  # First we establish a jump speed that is color dependent
+  # First we establish a jump direction that is color dependent
   # (for pawns only)
   speed = (color == white) ? 1 : -1
 
@@ -216,11 +236,11 @@ end
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
-function getMoves(color::Color, board::ChessBoard)
-   return  [get_moves_for_piece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
-                               for c in getCoordsForPieces(color,startingBoard)]
+getMoves(color::Color, board::ChessBoard) =
+    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
+                               for c in getCoordsForPieces(color,startingBoard)]))
 
-end
+
 
 # All the opening moves for pawns and horses
 @test 20 == length(getMoves(white, startingBoard))
