@@ -14,16 +14,12 @@ import Base.show
 import Base.==
 import Base.+
 import Base.*
-using  Base.Test
+
+using  Test
 
 
-# A flatten method from the internets
-flatten{T}(a::Array{T,1}) = any(map(x->isa(x,Array),a))? flatten(vcat(map(flatten,a)...)): a
-flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
-flatten(a)=a
 
-
-type Color
+struct Color
    name:: String
    shortName:: String
 end
@@ -48,13 +44,13 @@ transparent = Color("Blank", " ");
 @test black != transparent
 
 abstract type PieceType end
-type Pawn   <: PieceType end
-type Rook   <: PieceType end
-type Knight <: PieceType end
-type Bishop <: PieceType end
-type Queen  <: PieceType end
-type King   <: PieceType end
-type Blank  <: PieceType end
+struct Pawn   <: PieceType end
+struct Rook   <: PieceType end
+struct Knight <: PieceType end
+struct Bishop <: PieceType end
+struct Queen  <: PieceType end
+struct King   <: PieceType end
+struct Blank  <: PieceType end
 
 pawn   = Pawn();
 rook   = Rook();
@@ -64,7 +60,7 @@ queen  = Queen();
 king   = King();
 blank  = Blank();
 
-type ChessPiece
+struct ChessPiece
   color:: Color
   piecetype:: PieceType
   printrep:: String
@@ -96,25 +92,24 @@ bs = ChessPiece(transparent, blank,  " ",  " ");
 ## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)
 
-
-type ChessBoard
+struct ChessBoard
    # This must be an 8x8 matrice. That fact shoul
    # be a constraint somewhere
    board::Array{ChessPiece}
 end
 
 ## Printing chessboards
-function show(io::IO, cb::ChessBoard)
- for y1 = 1:8
-  y = 9 - y1;
+function show(io::IOStream, cb::ChessBoard)
+ for y1  in  1:8
+  y = 9 - y1
   print(io, y)
-   for x = 1:8
-       @printf(io, "%s",  cb.board[y, x].printrep)
-   end
-   println(io, y)
+  for x in  1:8
+      print(io, x)
+      # @printf(io, "%s",  cb.board[y, x].printrep)
+  end
+  println(io, y)
  end
 end
-
 
 # Constructing an initial chessboard
 startingBoardArray = [
@@ -128,10 +123,9 @@ startingBoardArray = [
   br bk bb bq bki bb bk br;
 ];
 
-
 startingBoard = ChessBoard(startingBoardArray)
 
-type Coord
+struct Coord
     x:: Int64 # Should be Uint8 (or even Uint5 or Uint4, of they exist)
     y:: Int64
 end
@@ -181,11 +175,13 @@ end
 ## Printing a coordinate
 function show(io::IO, m::Coord)
    # If it's a valid coordinate, use chess notation
-   if (isValidCoord(m))
-      @printf(io, "%s%d", intToChessLetter(m.x), m.y)
-   else
+    if (isValidCoord(m))
+        print(io, m)
+      # @printf(io, "%s%d", intToChessLetter(m.x), m.y)
+    else
+        print(io, m)        
       # If not then use coordinate notation.
-      @printf(io, "Coord(%d, %d)", m.x, m.y)
+      # @printf(io, "Coord(%d, %d)", m.x, m.y)
    end
 end
 
@@ -319,7 +315,7 @@ function getCoordsForPieces(color::Color, board::ChessBoard)
 end
 
 # Representing moves
-type Move
+struct Move
     start:: Coord
     destination:: Coord
     capture:: Bool # XXX Redundant!
@@ -348,7 +344,7 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord; requireCaptu
     destination = start + jump
 
     if (!isValidCoord(destination))
-        return null
+        return nothing
      end
 
      destinationPiece = getPieceAt(board, destination)
@@ -358,12 +354,12 @@ function moveFromJump(board::ChessBoard, start::Coord, jump::Coord; requireCaptu
      isCapture = isLegalMove && (destinationPiece.color != transparent)
 
      if (!isLegalMove)
-        return null
+        return nothing
      elseif (requireCaptures)
           if (isCapture)
 	    return Move(start, destination, isCapture, startPiece, destinationPiece)
 	  else
-	    return null
+	    return nothing
           end
      else
           return Move(start, destination, isCapture, startPiece, destinationPiece)
@@ -374,6 +370,9 @@ end
 @test Move(a2, a3, false, wp, bs) == moveFromJump(startingBoard, a2, Coord(0,1))
 
 
+## XXX Much too permissive, so just placeholder
+move_is_defined(m) = true
+
 function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
 #    map(j ->
 #	  moveFromJump(board, start, j, requireCaptures = requireCaptures),
@@ -381,10 +380,13 @@ function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, 
     #  XXX I don't understand why the code above fails and the code below works.
     result = []
     for j in jumps
-       move = moveFromJump(board, start, j; requireCaptures = requireCaptures)
-       if (move != null)
-           result = [result..., move]
-       end
+        move = moveFromJump(board, start, j; requireCaptures = requireCaptures)
+
+        print(stdout, "TBD")
+        # @printf(STDOUT, "  generated move = %s)", move)
+        if (move_is_defined(move))
+            result = [result..., move]
+        end
     end
     return result
 end
@@ -396,7 +398,7 @@ function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, co
 end
 
 function getMovesForPiece(piece::Blank, board::ChessBoard, coord::Coord)
-  []  # Arguably, this should throw an exception instead, or return null.
+  []  # Arguably, this should throw an exception instead, or return nothing.
 end
 
 
@@ -432,12 +434,7 @@ function getMovesFromRay(
 end
 
 function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-   # XXX This really -should- be using a "map" construct.
-   local result = []
-   for gen in generators
-     result [result ..., getMovesFromRay(gen, color, board, coord, oneStepOnly)]
-   end
-   return result
+    return [ getMovesFromRay(gen, color, board, coord, oneStepOnly) for gen in generators]
 end
 
 bishopRayGenerators = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
@@ -453,8 +450,10 @@ function getMovesForPiece(piece::Rook, color::Color,  board::ChessBoard, coord::
 end
 
 
+flatten_moves(x) = x |> Iterators.flatten |> collect
+
 function getRoyalMoves(color::Color,  board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-   flatten([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly),
+    return flatten_moves([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly),
             getMovesFromRays(rookRayGenerators, color, board, coord; oneStepOnly = oneStepOnly)])
 end
 
@@ -511,7 +510,7 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # XXX Just use flatten instead?
   moves = union([movesFromJumps(board, coord, ncray, false),
     		 movesFromJumps(board, coord, captureJumps, true)])
-  moves = filter(m -> m != null, moves) #Kludge
+  moves = filter(m -> move_is_defined(m), moves) #Kludge
 
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
@@ -531,7 +530,8 @@ end
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-	    flatten( union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
+	             flatten_moves(
+                         union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
                 for c=getCoordsForPieces(color,startingBoard)
          }))
 end
