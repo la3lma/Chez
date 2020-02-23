@@ -26,7 +26,7 @@ end
 struct Move
     start:: Coord
     destination:: Coord
-    capture:: Bool # XXX Redundant!
+    capture:: Bool
     startPiece:: ChessPiece
     destinationPiece:: ChessPiece
 end
@@ -43,63 +43,43 @@ function ==(m1::Move, m2::Move)
 end
 
 
+move_is_valid(m::Move) = isValidCoord(m.destination)
+
 function validMoves(moves::Array{Move, 1})
-     filter(m -> isValidCoord(m.destination), moves)
+     filter(move_is_valid, moves)
 end
 
 
-function moveFromJump(board::ChessBoard, start::Coord, jump::Coord; requireCaptures::Bool = false)
+function move_from_jump(board::ChessBoard, start::Coord, jump::Coord, requireCapture::Bool = false)
     destination = start + jump
 
     if (!isValidCoord(destination))
         return nothing
-     end
+    end
 
-     destinationPiece = getPieceAt(board, destination)
-     startPiece = getPieceAt(board, start)
+    destinationPiece = getPieceAt(board, destination)
+    startPiece = getPieceAt(board, start)
 
-     isLegalMove = destinationPiece.color != startPiece.color
-     isCapture = isLegalMove && (destinationPiece.color != transparent)
+    isLegalMove = destinationPiece.color != startPiece.color
+    isCapture = isLegalMove && (destinationPiece.color != transparent)
 
-     if (!isLegalMove)
-        return nothing
-     elseif (requireCaptures)
-          if (isCapture)
-	    return Move(start, destination, isCapture, startPiece, destinationPiece)
-	  else
-	    return nothing
-          end
-     else
-          return Move(start, destination, isCapture, startPiece, destinationPiece)
-     end
+    if (!isLegalMove || (requireCapture && !isCapture))
+       return nothing
+    else
+       return Move(start, destination, isCapture, startPiece, destinationPiece)
+    end
 end
 
 # Test movement of a single pawn
-@test Move(a2, a3, false, wp, bs) == moveFromJump(startingBoard, a2, Coord(0,1))
+@test Move(a2, a3, false, wp, bs) == move_from_jump(startingBoard, a2, Coord(0,1))
 
 
-## XXX Much too permissive, so just placeholder
-move_is_defined(m) = true
-
-function movesFromJumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
-#    map(j ->
-#	  moveFromJump(board, start, j, requireCaptures = requireCaptures),
-#        jumps)
-    #  XXX I don't understand why the code above fails and the code below works.
-    result = []
-    for j in jumps
-        move = moveFromJump(board, start, j; requireCaptures = requireCaptures)
-
-        print(stdout, "TBD")
-        # @printf(STDOUT, "  generated move = %s)", move)
-        if (move_is_defined(move))
-            result = [result..., move]
-        end
-    end
-    return result
+function moves_from_jumps(board::ChessBoard, start::Coord, jumps::Array{Coord,1}, requireCaptures::Bool)
+    candidates =  [ move_from_jump(board, start, j, requireCaptures) for j in jumps ]
+    return filter(move_is_valid, candidates)
 end
 
-@test [ Move(a2, a3, false, wp, bs)]   == movesFromJumps(startingBoard, a2,[Coord(0,1)], false)
+@test [ Move(a2, a3, false, wp, bs)]   == moves_from_jumps(startingBoard, a2,[Coord(0,1)], false)
 
 function getMovesForPiece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
   []
@@ -120,10 +100,12 @@ function getMovesFromRay(
 	 board::ChessBoard,
 	 start::Coord,
 	 oneStepOnly::Bool)
-    local destination = start + generator
-    local result = []
-    local capture=false
-    local startPiece = getPieceAt(board, start)
+
+    destination = start + generator
+    result = []
+    capture=false
+    startPiece = getPieceAt(board, start)
+
     while (isValidCoord(destination) && !capture)
         local destinationPiece = getPieceAt(board, destination)
 	if (destinationPiece.color == startPiece.color)
@@ -185,7 +167,7 @@ knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
  	       Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
 
 function getMovesForPiece(piece::Knight, color::Color, board::ChessBoard, coord::Coord)
-    movesFromJumps(board, coord, knightJumps, false)
+    moves_from_jumps(board, coord, knightJumps, false)
 end
 
 
@@ -216,9 +198,9 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
   # XXX Just use flatten instead?
-  moves = union([movesFromJumps(board, coord, ncray, false),
-    		 movesFromJumps(board, coord, captureJumps, true)])
-  moves = filter(m -> move_is_defined(m), moves) #Kludge
+  moves = union([moves_from_jumps(board, coord, ncray, false),
+    		 moves_from_jumps(board, coord, captureJumps, true)])
+  moves = filter(move_is_valid, moves) #Kludge
 
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
