@@ -1,18 +1,19 @@
+using Printf
 
 struct ChessBoard
-   # This must be an 8x8 matrice. That fact shoul
+   # This must be an 8x8 matrice. That fact should
    # be a constraint somewhere
    board::Array{ChessPiece}
 end
 
+
 ## Printing chessboards
-function show(io::IOStream, cb::ChessBoard)
+function show(io::IO, cb::ChessBoard)
  for y1  in  1:8
   y = 9 - y1
   print(io, y)
   for x in  1:8
-      print(io, x)
-      # @printf(io, "%s",  cb.board[y, x].printrep)
+     @printf(io, "%s",  cb.board[y, x].unicode)
   end
   println(io, y)
  end
