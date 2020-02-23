@@ -33,9 +33,11 @@ startingBoardArray = [
 
 startingBoard = ChessBoard(startingBoardArray)
 
+@test show(stdout, startingBoard) == nothing
+
 struct Coord
-    x:: Int64 # Should be Uint8 (or even Uint5 or Uint4, of they exist)
-    y:: Int64
+    x:: UInt8
+    y:: UInt8
 end
 
 function intToChessLetter(i::Integer)
@@ -67,7 +69,7 @@ end
 
 # For the chessboard only ordinates in the range [1..8] are
 # valid, so we add some predicates to test for that
-isValidOrdinate(c::Int)  =  1 <= c && c <= 8
+isValidOrdinate(c::UInt8)  =  1 <= c && c <= 8
 
 @test !isValidOrdinate(0)
 @test  isValidOrdinate(1)
@@ -81,17 +83,25 @@ end
 
 
 ## Printing a coordinate
-function show(io::IO, m::Coord)
-   # If it's a valid coordinate, use chess notation
+
+# If it's a valid coordinate, use chess notation, otherwise print as coordinate
+function coord_to_string(m::Coord)
     if (isValidCoord(m))
-        print(io, m)
-      # @printf(io, "%s%d", intToChessLetter(m.x), m.y)
+        return @sprintf("%s%d", intToChessLetter(m.x), m.y)
     else
-        print(io, m)        
-      # If not then use coordinate notation.
-      # @printf(io, "Coord(%d, %d)", m.x, m.y)
-   end
+        return @sprintf("Coord(%d, %d)", m.x, m.y)
+    end
 end
+
+@test coord_to_string(Coord(8,8)) == "h8"
+@test coord_to_string(Coord(8,9)) == "Coord(8, 9)"
+
+
+function show(io::IO, m::Coord)
+
+    print(io, coord_to_string(m))
+end
+
 
 ## All coordinates, expanded for convenience
 a1=Coord(1,1)

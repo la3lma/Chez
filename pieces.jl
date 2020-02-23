@@ -84,7 +84,7 @@ wp  = ChessPiece(white, pawn,   "p", "♙");
 wr  = ChessPiece(white, rook,   "r", "♖");
 wk  = ChessPiece(white, knight, "g", "♘");
 wb  = ChessPiece(white, bishop, "b", "♗");
-wq  = Chesspiece(white, queen,  "q", "♕");
+wq  = ChessPiece(white, queen,  "q", "♕");
 wki = ChessPiece(white, king,   "k", "♔");
 
 bs = ChessPiece(transparent, blank,  " ",  " ");
