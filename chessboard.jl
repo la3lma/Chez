@@ -72,7 +72,7 @@ end
 
 # For the chessboard only ordinates in the range [1..8] are
 # valid, so we add some predicates to test for that
-isValidOrdinate(c::Int)  =  1 <= c && c <= 8
+isValidOrdinate(c)  =  1 <= c && c <= 8
 
 @test !isValidOrdinate(0)
 @test  isValidOrdinate(1)
