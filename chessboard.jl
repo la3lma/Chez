@@ -1,8 +1,11 @@
+###
+###  Representing and printing the chessboard
+###
+
+
 using Printf
 
 struct ChessBoard
-   # This must be an 8x8 matrice. That fact should
-   # be a constraint somewhere
    board::Array{ChessPiece}
 end
 
@@ -36,8 +39,8 @@ startingBoard = ChessBoard(startingBoardArray)
 @test show(stdout, startingBoard) == nothing
 
 struct Coord
-    x:: UInt8
-    y:: UInt8
+    x:: Int8
+    y:: Int8
 end
 
 function intToChessLetter(i::Integer)
@@ -69,7 +72,7 @@ end
 
 # For the chessboard only ordinates in the range [1..8] are
 # valid, so we add some predicates to test for that
-isValidOrdinate(c::UInt8)  =  1 <= c && c <= 8
+isValidOrdinate(c::Int)  =  1 <= c && c <= 8
 
 @test !isValidOrdinate(0)
 @test  isValidOrdinate(1)

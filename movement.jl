@@ -1,7 +1,7 @@
 
-##
-##  Representing movement
-##
+###
+###  Representing movement
+###
 
 function allCoords()
     result = Coord[]
