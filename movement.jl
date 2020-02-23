@@ -3,7 +3,7 @@
 ###  Representing movement
 ###
 
-function allCoords()
+function get_all_coords()
     result = Coord[]
      for y = 1:8, x = 1:8
         c = Coord(x, y)
@@ -12,13 +12,13 @@ function allCoords()
      return result
 end
 
-coords = allCoords()
+coords = get_all_coords()
 
 @test 64 == length(coords)
 
 # Get coordinates for all the pieces of a particular
 # color
-function getCoordsForPieces(color::Color, board::ChessBoard)
+function get_coords_for_pieces(color::Color, board::ChessBoard)
    return filter(c -> (getPieceAt(board, c).color == color), coords)
 end
 
@@ -115,7 +115,7 @@ end
 # Rooks, kings, bishops are all made up by
 # rays and filtering.
 
-function getMovesFromRay(
+function get_moves_from_ray(
 	 generator::Coord,
 	 color::Color,
 	 board::ChessBoard,
@@ -146,36 +146,36 @@ function getMovesFromRay(
     return result
 end
 
-function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false)
-    return [ getMovesFromRay(gen, color, board, coord, oneStepOnly) for gen in generators]
+function get_moves_from_rays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false)
+    return [ get_moves_from_ray(gen, color, board, coord, oneStepOnly) for gen in generators]
 end
 
-bishopRayGenerators = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
+bishop_ray_generators = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
 
 function get_moves_for_piece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord)
-	 getMovesFromRays(bishopRayGenerators, color, board, coord)
+	 get_moves_from_rays(bishop_ray_generators, color, board, coord)
 end
 
-rookRayGenerators = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 0)]
+rook_ray_generators = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 0)]
 
 function get_moves_for_piece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord)
-	 getMovesFromRays(rookRayGenerators, color, board, coord)
+	 get_moves_from_rays(rook_ray_generators, color, board, coord)
 end
 
 
 flatten_moves(x) = x |> Iterators.flatten |> collect
 
-function getRoyalMoves(color::Color, board::ChessBoard, coord::Coord,
+function get_royal_moves(color::Color, board::ChessBoard, coord::Coord,
     oneStepOnly::Bool = false) return flatten_moves(
-    [getMovesFromRays(bishopRayGenerators, color, board, coord,
-    oneStepOnly), getMovesFromRays(rookRayGenerators, color, board,
+    [get_moves_from_rays(bishop_ray_generators, color, board, coord,
+    oneStepOnly), get_moves_from_rays(rook_ray_generators, color, board,
     coord, oneStepOnly)]) end
 
 is_legal_king_move(move::Move, board::ChessBoard) = false
 
-get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  getRoyalMoves(color, board, coord, false)
+get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  get_royal_moves(color, board, coord, false)
 get_moves_for_piece(piece::King, color::Color,  board::ChessBoard, coord::Coord) =
-      flatten_moves(getRoyalMoves(color, board, coord, true)) |>   moves -> filter(m->is_legal_king_move(m, board), moves)
+      flatten_moves(get_royal_moves(color, board, coord, true)) |>   moves -> filter(m->is_legal_king_move(m, board), moves)
 
 
 knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
@@ -191,8 +191,8 @@ end
 @test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == get_moves_for_piece(wk.piecetype, white,  startingBoard, b1)
 
 
-pawnStartLine(color::Color) =  (color == black) ? 7 : 2
-finishLine(color::Color)    =  (color == black) ? 1 : 8
+pawn_start_line(color::Color) =  (color == black) ? 7 : 2
+finish_line(color::Color)    =  (color == black) ? 1 : 8
 
 
 function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
@@ -201,7 +201,7 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
   speed = (color == white) ? 1 : -1
 
   # Then we establish a single non-capturing movement ray
-  if  (coord.y == pawnStartLine(color))
+  if  (coord.y == pawn_start_line(color))
      ncray = [Coord(0,speed), 2 * Coord(0, speed)]
   else
      ncray = [Coord(0,speed)]
@@ -216,13 +216,12 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
   moves = flatten_moves(vcat([moves_from_jumps(board, coord, ncray, false),
     		moves_from_jumps(board, coord, captureJumps, true)]))
 
-  println("moves = ", moves)
   moves = filter(move_is_valid, moves) #Kludge
 
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
   for move in moves
-      if (move.destination.y == finishLine(color))
+      if (move.destination.y == finish_line(color))
 	 move.piece = queenOfColor(color)
       end
   end
@@ -236,12 +235,12 @@ end
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
-getMoves(color::Color, board::ChessBoard) =
+get_moves(color::Color, board::ChessBoard) =
     filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
-                               for c in getCoordsForPieces(color,startingBoard)]))
+                               for c in get_coords_for_pieces(color,startingBoard)]))
 
 
 
 # All the opening moves for pawns and horses
-@test 20 == length(getMoves(white, startingBoard))
-@test 20 == length(getMoves(black, startingBoard))
+@test 20 == length(get_moves(white, startingBoard))
+@test 20 == length(get_moves(black, startingBoard))
