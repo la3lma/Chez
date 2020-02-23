@@ -43,7 +43,8 @@ function ==(m1::Move, m2::Move)
 end
 
 
-move_is_valid(m::Move) = isValidCoord(m.destination)
+move_is_valid(::Nothing) = false
+move_is_valid(m::Move)   = isValidCoord(m.destination)
 
 function validMoves(moves::Array{Move, 1})
      filter(move_is_valid, moves)
@@ -111,11 +112,13 @@ function getMovesFromRay(
 	if (destinationPiece.color == startPiece.color)
           break
         end
+
 	capture = (bs != destinationPiece)
         local move = Move(start, destination, capture, startPiece, destinationPiece)
-	result = [result ..., move]
+        push!(result, move)
+
 	if (!oneStepOnly)
-	   destination +=  generator;
+	   destination +=  generator
         else
            break
         end
@@ -123,7 +126,7 @@ function getMovesFromRay(
     return result
 end
 
-function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
+function getMovesFromRays(generators::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false)
     return [ getMovesFromRay(gen, color, board, coord, oneStepOnly) for gen in generators]
 end
 
@@ -142,10 +145,11 @@ end
 
 flatten_moves(x) = x |> Iterators.flatten |> collect
 
-function getRoyalMoves(color::Color,  board::ChessBoard, coord::Coord; oneStepOnly::Bool = false)
-    return flatten_moves([getMovesFromRays(bishopRayGenerators, color, board, coord; oneStepOnly = oneStepOnly),
-            getMovesFromRays(rookRayGenerators, color, board, coord; oneStepOnly = oneStepOnly)])
-end
+function getRoyalMoves(color::Color, board::ChessBoard, coord::Coord,
+    oneStepOnly::Bool = false) return flatten_moves(
+    [getMovesFromRays(bishopRayGenerators, color, board, coord,
+    oneStepOnly), getMovesFromRays(rookRayGenerators, color, board,
+    coord; oneStepOnly = oneStepOnly)]) end
 
 function getMovesForPiece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord)
    getRoyalMoves(color, board, coord; oneStepOnly=false)
@@ -154,13 +158,13 @@ end
 # XXX Return true iff the move represents a legal move for a king
 #     (don't get too close to a king on the board essentially, check
 #      detection is not implemented at this level).
-function islegalKingMove(move::Move, board::ChessBoard)
+function is_legal_king_move(move::Move, board::ChessBoard)
   false
 end
 
 function getMovesForPiece(piece::King, color::Color,  board::ChessBoard, coord::Coord)
-   moves = getRoyalMoves(color, board, coord; oneStepOnly=true)
-   filter(m->isLegalKingMove(m, board), moves)
+   moves = flatten_moves(getRoyalMoves(color, board, coord; oneStepOnly=true))
+   filter(m->is_legal_king_move(m, board), moves)
 end
 
 knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
@@ -198,8 +202,10 @@ function getMovesForPiece(piece::Pawn, color::Color,  board::ChessBoard, coord::
   # Then we have to process these alternatives
   # to check that they are inside the board etc.
   # XXX Just use flatten instead?
-  moves = union([moves_from_jumps(board, coord, ncray, false),
-    		 moves_from_jumps(board, coord, captureJumps, true)])
+  moves = flatten_moves(vcat([moves_from_jumps(board, coord, ncray, false),
+    		moves_from_jumps(board, coord, captureJumps, true)]))
+
+  println("moves = ", moves)
   moves = filter(move_is_valid, moves) #Kludge
 
   # Finally we do the pawn-specific tranformation
@@ -220,10 +226,9 @@ end
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 function getMoves(color::Color, board::ChessBoard)
-	             flatten_moves(
-                         union({ getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
-                for c=getCoordsForPieces(color,startingBoard)
-         }))
+   return  [getMovesForPiece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
+                               for c=getCoordsForPieces(color,startingBoard)]
+
 end
 
 # All the opening moves for pawns and horses
