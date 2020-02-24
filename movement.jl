@@ -25,9 +25,7 @@ captures_king(m::Move) = (m.destinationPiece.piecetype == king)
 ##
 function apply_move!(m::Move, board::ChessBoard)
 
-
     finish_line(color::Color)     =  (color == black) ? 1 : 8
-
 
     # New board
     cloned_board = clone_board(board)
@@ -367,6 +365,6 @@ end
 
 # Play a hundred random games with no output, just to check that the
 # game mechanics isn't totally screwed up
-@test [play_game(random_choice, 5000, devnull) for x in 1:100]
+@test [play_game(random_choice, 5000, devnull) for x in 1:100] != nothing
 
 play_random_game(rounds=50) = play_game(random_choice, rounds)
