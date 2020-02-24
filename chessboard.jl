@@ -9,6 +9,8 @@ struct ChessBoard
    board::Array{ChessPiece}
 end
 
+clone_board(b::ChessBoard) = ChessBoard(deepcopy(b.board))
+
 
 ## Printing chessboards
 function show(io::IO, cb::ChessBoard)
@@ -205,6 +207,12 @@ h8=Coord(8,8)
 function getPieceAt(board::ChessBoard, coord::Coord)
     return board.board[coord.y, coord.x]
 end
+
+
+function set_piece_at!(board::ChessBoard, coord::Coord, piece::ChessPiece)
+    board.board[coord.y, coord.x] = piece
+end
+
 
 # Check that the coordinates are not messed up
 @test getPieceAt(startingBoard, Coord(1,1)) == wr

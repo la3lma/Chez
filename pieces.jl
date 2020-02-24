@@ -35,10 +35,11 @@ black       = Color("Black", "b");
 white       = Color("White", "w");
 transparent = Color("Blank", " ");
 
-other_color(black)       = white
-other_color(white)       = black
-other_color(transparent) = transparent
-
+function other_color(c::Color)
+      return c == white ? black : 
+             c == black ? white :
+             transparent
+end
 
 @test white == white
 @test white != black

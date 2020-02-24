@@ -16,8 +16,24 @@ struct Move
     capture:: Bool
     startPiece:: ChessPiece
     destinationPiece:: ChessPiece
-    # XXX Must include a field stating if it's a chess-producing move or not
 end
+
+captures_king(m::Move) = (m.destinationPiece.piecetype == king)
+
+##
+## Applying moves
+##
+function apply_move(m::Move, board::ChessBoard)
+    cloned_board = clone_board(board)
+    set_piece_at!(cloned_board, m.destination, m.startPiece)
+    set_piece_at!(cloned_board, m.start, bs)
+    return cloned_board
+end
+
+
+##
+## Pretty printing moves
+##
 
 # Take a look at http://en.wikipedia.org/wiki/Chess_notation, Print moves
 # in an orderly proficient algebraic or long algebraic manner.
@@ -40,13 +56,17 @@ end
 show(io::IO, m::Move) = show(io, move_as_san(m))
 
 
-function ==(m1::Move, m2::Move)
-     return (m1.start == m2.start) &&
-            (m1.destination == m2.destination) &&
-	    (m1.capture == m2.capture) &&
-	    (m1.startPiece == m2.startPiece) &&
-	    (m1.destinationPiece == m2.destinationPiece)
-end
+##
+## Checking if moves are identical
+##
+#
+# function ==(m1::Move, m2::Move)
+#      return (m1.start == m2.start) &&
+#             (m1.destination == m2.destination) &&
+# 	    (m1.capture == m2.capture) &&
+# 	    (m1.startPiece == m2.startPiece) &&
+# 	    (m1.destinationPiece == m2.destinationPiece)
+# end
 
 
 ##
@@ -221,13 +241,20 @@ get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool
 find_coords_of_piece(board, piece) = filter(c -> (getPieceAt(board, c) == piece), coords)
 
 function is_legal_king_move(move::Move, board::ChessBoard)
-    other_king = king_of_color(other_color(move.startPiece.color))
-    okc = find_coords_of_piece(board, other_king)
+    opponents_color = other_color(move.startPiece.color)
+    other_king = king_of_color(opponents_color)
+    okc = find_coords_of_piece(board, other_king)[1]
     kc  = move.destination
     too_close = abs(kc.x-okc.x) == 1 || abs(kc.y-okc.y)
 
-    # XXX Missing check for self-check.
-    return !too_close
+    if too_close
+        return false
+    end
+
+    board_with_move_applied = apply_move!(move, board)
+    opponents_next_moves = get_moves(opponents_color, board)
+    opponent_can_win = isempty(filter(captures_king, opponents_next_moves))
+    return !opponent_can_win
 end    
 
 get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  get_royal_moves(color, board, coord)
@@ -241,7 +268,6 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
   pawn_start_line(color::Color) =  (color == black) ? 7 : 2
   finish_line(color::Color)     =  (color == black) ? 1 : 8
 
-    
   # First we establish a jump direction that is color dependent
   # (for pawns only)
   speed = (color == white) ? 1 : -1
@@ -284,9 +310,47 @@ end
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 get_moves(color::Color, board::ChessBoard) =
-    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
-                               for c in get_coords_for_pieces(color,startingBoard)]))
+    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(board, c).piecetype, color,  board, c)
+                               for c in get_coords_for_pieces(color, board)]))
 
 # All the opening moves for pawns and horses
 @test 20 == length(get_moves(white, startingBoard))
 @test 20 == length(get_moves(black, startingBoard))
+
+
+
+
+
+##
+## Gameplay
+##
+
+random_choice(board, moves) = moves[rand(1:length(moves))]
+
+# A simple player that will exercise the game playing mechanics.
+
+function play_game(strategy, max_rounds)
+    color = white
+    game_is_won = false
+    round = 0
+    board = startingBoard
+    
+    while (!game_is_won && round < max_rounds + 1)
+        println("Round " , round, " color ", color)
+        available_moves = get_moves(color, board)
+        if (!isempty(available_moves))
+            println("Number of moves available = ", length(available_moves))
+            println("Moves available = ", available_moves)
+            move = strategy(board, available_moves)
+            println("Applying move ",  move)
+            board = apply_move(move, board)
+            println(board)
+            game_is_won = captures_king(move)
+        end
+        round += 1
+        color = other_color(color)        
+    end
+end
+
+
+play_random_game(rounds=10) = play_game(random_choice, rounds)
