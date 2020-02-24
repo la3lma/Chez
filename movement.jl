@@ -23,7 +23,7 @@ captures_king(m::Move) = (m.destinationPiece.piecetype == king)
 ##
 ## Applying moves
 ##
-function apply_move(m::Move, board::ChessBoard)
+function apply_move!(m::Move, board::ChessBoard)
     cloned_board = clone_board(board)
     set_piece_at!(cloned_board, m.destination, m.startPiece)
     set_piece_at!(cloned_board, m.start, bs)
@@ -133,28 +133,6 @@ function move_from_jump(board::ChessBoard, start::Coord, jump::Coord, requireCap
     end
 end
 
-# Test movement of a single pawn
-@test Move(a2, a3, false, wp, bs) == move_from_jump(startingBoard, a2, Coord(0,1))
-
-
-moves_from_jumps(board::ChessBoard, start::Coord, jumps, requireCaptures::Bool) =
-       [ move_from_jump(board, start, j, requireCaptures) for j in jumps ] |> valid_moves
-
-
-@test [ Move(a2, a3, false, wp, bs)]   == moves_from_jumps(startingBoard, a2,[Coord(0,1)], false)
-
-# XXX Placeholder.  When we are able to generate all moves for all types, this
-#     "catch-all" movement generator should either be removed, or throw some kind of
-#     exception.
-function get_moves_for_piece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
-  []
-end
-
-# Same as above.  Remove when complete movement generation has been implemented.
-function get_moves_for_piece(piece::Blank, board::ChessBoard, coord::Coord)
-  []  # Arguably, this should throw an exception instead, or return nothing.
-end
-
 
 
 # Rooks, kings, bishops are all made up by
@@ -181,7 +159,7 @@ function get_moves_from_ray(
         # Is the piece at the destination the same as the
         # piece being move, if so break off. No more moves
         # to generate.
-	if (destinationPiece.color == startPiece.color)
+	if destinationPiece.color == startPiece.color
           break
         end
 
@@ -189,7 +167,7 @@ function get_moves_from_ray(
         # as the target, we're capturing something
 	capture = (bs != destinationPiece)
 
-        # Generate the move and putadd it to the result
+        # Generate the move and add it to the result
         move = Move(start, destination, capture, startPiece, destinationPiece)
         push!(result, move)
 
@@ -203,6 +181,32 @@ function get_moves_from_ray(
     end
     return result
 end
+
+
+# Test movement of a single pawn
+@test Move(a2, a3, false, wp, bs) == move_from_jump(startingBoard, a2, Coord(0,1))
+
+
+moves_from_jumps(board::ChessBoard, start::Coord, jumps, requireCaptures::Bool) =
+       [ move_from_jump(board, start, j, requireCaptures) for j in jumps ] |> valid_moves
+
+
+@test [ Move(a2, a3, false, wp, bs)]   == moves_from_jumps(startingBoard, a2,[Coord(0,1)], false)
+
+# XXX Placeholder.  When we are able to generate all moves for all types, this
+#     "catch-all" movement generator should either be removed, or throw some kind of
+#     exception.
+# function get_moves_for_piece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
+#   []
+# end
+
+# # Same as above.  Remove when complete movement generation has been implemented.
+# function get_moves_for_piece(piece::Blank, board::ChessBoard, coord::Coord)
+#   []  # Arguably, this should throw an exception instead, or return nothing.
+# end
+
+
+
 
 flatten_moves(x) = x |> Iterators.flatten |> collect
 
@@ -245,7 +249,7 @@ function is_legal_king_move(move::Move, board::ChessBoard)
     other_king = king_of_color(opponents_color)
     okc = find_coords_of_piece(board, other_king)[1]
     kc  = move.destination
-    too_close = abs(kc.x-okc.x) == 1 || abs(kc.y-okc.y)
+    too_close = abs(kc.x-okc.x) == 1 || abs(kc.y-okc.y) == 1
 
     if too_close
         return false
@@ -271,7 +275,7 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
   # First we establish a jump direction that is color dependent
   # (for pawns only)
   speed = (color == white) ? 1 : -1
-
+    
   # Then we establish a single non-capturing movement ray
   if  (coord.y == pawn_start_line(color))
      ncray = [Coord(0, speed), 2 * Coord(0, speed)]
@@ -284,10 +288,11 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
 
 
   # This is  such a kludge!
-  moves = flatten_moves(vcat([moves_from_jumps(board, coord, ncray, false),
-    		moves_from_jumps(board, coord, captureJumps, true)]))
+    moves = flatten_moves(
+        [moves_from_jumps(board, coord, ncray, false),
+    	 moves_from_jumps(board, coord, captureJumps, true)])
 
-  moves = filter(move_is_valid, moves)
+  moves = valid_moves(moves)
 
   # Finally we do the pawn-specific tranformation
   # if we find ourself ending up on the finishing line
@@ -343,7 +348,7 @@ function play_game(strategy, max_rounds)
             println("Moves available = ", available_moves)
             move = strategy(board, available_moves)
             println("Applying move ",  move)
-            board = apply_move(move, board)
+            board = apply_move!(move, board)
             println(board)
             game_is_won = captures_king(move)
         end
