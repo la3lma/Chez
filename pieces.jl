@@ -102,5 +102,12 @@ function king_of_color(c::Color)
              nothing
 end
 
+function queen_of_color(c::Color)
+      return c == white ? wq : 
+             c == black ? bq :
+             nothing
+end
+
+
 ## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)

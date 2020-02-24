@@ -24,9 +24,25 @@ captures_king(m::Move) = (m.destinationPiece.piecetype == king)
 ## Applying moves
 ##
 function apply_move!(m::Move, board::ChessBoard)
+
+
+    finish_line(color::Color)     =  (color == black) ? 1 : 8
+
+
+    # New board
     cloned_board = clone_board(board)
-    set_piece_at!(cloned_board, m.destination, m.startPiece)
+
+    # Do queen conversion  if appropriate
+    if (m.startPiece.piecetype == pawn && m.destination.y == finish_line(m.startPiece.color))
+       piece_being_placed_at_destination = queen_of_color(color)
+    else
+       piece_being_placed_at_destination = m.startPiece
+    end
+
+    # Do placement
+    set_piece_at!(cloned_board, m.destination, piece_being_placed_at_destination)
     set_piece_at!(cloned_board, m.start, bs)
+
     return cloned_board
 end
 
@@ -225,16 +241,16 @@ vertical_and_horizontal_rays = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 
 royal_rays                   = vcat(diagonal_rays, vertical_and_horizontal_rays)
 
 
-get_moves_for_piece(piece::Knight, color::Color, board::ChessBoard, coord::Coord) =
+get_moves_for_piece(piece::Knight, color::Color, board::ChessBoard, coord::Coord,  drop_king_moves::Bool) =
     moves_from_jumps(board, coord, knight_jumps, false)
 
-get_moves_for_piece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord) =
+get_moves_for_piece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord,  drop_king_moves::Bool) =
    get_moves_from_rays(diagonal_rays, color, board, coord)
 
-get_moves_for_piece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord) = 
+get_moves_for_piece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord,  drop_king_moves::Bool) = 
    get_moves_from_rays(vertical_and_horizontal_rays, color, board, coord)
 
-get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false) = 
+get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false,  drop_king_moves::Bool=false) = 
    get_moves_from_rays(royal_rays, color, board, coord, oneStepOnly)
 
 # This move is only legal if
@@ -245,6 +261,7 @@ get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool
 find_coords_of_piece(board, piece) = filter(c -> (getPieceAt(board, c) == piece), coords)
 
 function is_legal_king_move(move::Move, board::ChessBoard)
+    println("is_legal_king_move")
     opponents_color = other_color(move.startPiece.color)
     other_king = king_of_color(opponents_color)
     okc = find_coords_of_piece(board, other_king)[1]
@@ -256,22 +273,22 @@ function is_legal_king_move(move::Move, board::ChessBoard)
     end
 
     board_with_move_applied = apply_move!(move, board)
-    opponents_next_moves = get_moves(opponents_color, board)
+    opponents_next_moves = get_moves(opponents_color, board_with_move_applied, drop_king_moves=true)
     opponent_can_win = isempty(filter(captures_king, opponents_next_moves))
     return !opponent_can_win
 end    
 
-get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  get_royal_moves(color, board, coord)
+get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord,  drop_king_moves::Bool) =
+    get_royal_moves(color, board, coord, false, drop_king_moves)
 
-get_moves_for_piece(piece::King, color::Color,  board::ChessBoard, coord::Coord) =
-    filter(m->is_legal_king_move(m, board), get_royal_moves(color, board, coord, true))
+get_moves_for_piece(piece::King, color::Color,  board::ChessBoard, coord::Coord,  drop_king_moves::Bool) =
+    drop_king_moves ?  filter(m->is_legal_king_move(m, board), get_royal_moves(color, board, coord, true, false)) : []
 
 
-function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
+function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord, drop_king_moves::Bool)
 
   pawn_start_line(color::Color) =  (color == black) ? 7 : 2
-  finish_line(color::Color)     =  (color == black) ? 1 : 8
-
+    
   # First we establish a jump direction that is color dependent
   # (for pawns only)
   speed = (color == white) ? 1 : -1
@@ -288,43 +305,28 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
 
 
   # This is  such a kludge!
-    moves = flatten_moves(
-        [moves_from_jumps(board, coord, ncray, false),
-    	 moves_from_jumps(board, coord, captureJumps, true)])
-
-  moves = valid_moves(moves)
-
-  # Finally we do the pawn-specific tranformation
-  # if we find ourself ending up on the finishing line
-  for move in moves
-      if (move.destination.y == finish_line(color))
-	 move.piece = queenOfColor(color)
-      end
-  end
+  moves = [moves_from_jumps(board, coord, ncray, false),
+    	   moves_from_jumps(board, coord, captureJumps, true)] |> flatten_moves |> valid_moves
   return moves
 end
 
 
 # A few simple smoketests to see if the basic mechanics works for pawns and knights.
-@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == get_moves_for_piece(wk.piecetype, white,  startingBoard, b1)
-@test 2 == length(get_moves_for_piece(pawn,   white, startingBoard, a2))
-@test 2 == length(get_moves_for_piece(knight, white, startingBoard, b1))
+@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == get_moves_for_piece(wk.piecetype, white,  startingBoard, b1, false)
+@test 2 == length(get_moves_for_piece(pawn,   white, startingBoard, a2, false))
+@test 2 == length(get_moves_for_piece(knight, white, startingBoard, b1, false))
 
 
 # From a chessboard, extract all the possible moves for all
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
-get_moves(color::Color, board::ChessBoard) =
-    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(board, c).piecetype, color,  board, c)
+get_moves(color::Color, board::ChessBoard, drop_king_moves::Bool  = false) =
+    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(board, c).piecetype, color,  board, c, drop_king_moves)
                                for c in get_coords_for_pieces(color, board)]))
 
 # All the opening moves for pawns and horses
 @test 20 == length(get_moves(white, startingBoard))
 @test 20 == length(get_moves(black, startingBoard))
-
-
-
-
 
 ##
 ## Gameplay
@@ -351,10 +353,15 @@ function play_game(strategy, max_rounds)
             board = apply_move!(move, board)
             println(board)
             game_is_won = captures_king(move)
+            if game_is_won
+                println("Game is won by ",  color)
+            end
         end
         round += 1
         color = other_color(color)        
     end
+
+
 end
 
 
