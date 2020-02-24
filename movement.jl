@@ -336,6 +336,9 @@ random_choice(board, moves) = moves[rand(1:length(moves))]
 
 # A simple player that will exercise the game playing mechanics.
 
+
+## XXX TODO: Implement repetition detection, also return a struct
+##           describing the move as a sequence of moves/boards etc
 function play_game(strategy, max_rounds, io::IO = stdout)
     color = white
     game_is_won = false
@@ -351,7 +354,7 @@ function play_game(strategy, max_rounds, io::IO = stdout)
             move = strategy(board, available_moves)
             println(io, "Applying move ",  move)
             board = apply_move!(move, board)
-            println(board)
+            println(io, board)
             game_is_won = captures_king(move)
             if game_is_won
                 println(io, "Game is won by ",  color)
@@ -360,9 +363,10 @@ function play_game(strategy, max_rounds, io::IO = stdout)
         round += 1
         color = other_color(color)        
     end
-
-
 end
 
+# Play a hundred random games with no output, just to check that the
+# game mechanics isn't totally screwed up
+@test [play_game(random_choice, 5000, devnull) for x in 1:100]
 
-play_random_game(rounds=10) = play_game(random_choice, rounds)
+play_random_game(rounds=50) = play_game(random_choice, rounds)
