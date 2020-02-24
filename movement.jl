@@ -34,7 +34,7 @@ function apply_move!(m::Move, board::ChessBoard)
 
     # Do queen conversion  if appropriate
     if (m.startPiece.piecetype == pawn && m.destination.y == finish_line(m.startPiece.color))
-       piece_being_placed_at_destination = queen_of_color(color)
+       piece_being_placed_at_destination = queen_of_color(m.startPiece.color)
     else
        piece_being_placed_at_destination = m.startPiece
     end
@@ -336,25 +336,25 @@ random_choice(board, moves) = moves[rand(1:length(moves))]
 
 # A simple player that will exercise the game playing mechanics.
 
-function play_game(strategy, max_rounds)
+function play_game(strategy, max_rounds, io::IO = stdout)
     color = white
     game_is_won = false
     round = 0
     board = startingBoard
     
     while (!game_is_won && round < max_rounds + 1)
-        println("Round " , round, " color ", color)
+        println(io, "Round " , round, " color ", color)
         available_moves = get_moves(color, board)
         if (!isempty(available_moves))
-            println("Number of moves available = ", length(available_moves))
-            println("Moves available = ", available_moves)
+            println(io, "Number of moves available = ", length(available_moves))
+            println(io, "Moves available = ", available_moves)
             move = strategy(board, available_moves)
-            println("Applying move ",  move)
+            println(io, "Applying move ",  move)
             board = apply_move!(move, board)
             println(board)
             game_is_won = captures_king(move)
             if game_is_won
-                println("Game is won by ",  color)
+                println(io, "Game is won by ",  color)
             end
         end
         round += 1
