@@ -1,11 +1,13 @@
-## Gameplay
+###
+### Gameplay
+###
+
+
+
+
 ##
-
-random_choice(board, moves) = moves[rand(1:length(moves))]
-
-# A simple player that will exercise the game playing mechanics.
-
-
+##  Representing game outcomes
+##
 abstract type GameOutcome end
 struct Win   <: GameOutcome
     winner:: Color 
@@ -17,8 +19,11 @@ show(io::IO, w::Win) = show(io, @sprintf("Win by %s", w.winner))
 show(io::IO, w::Draw) = show(io, "Draw")
 
 
-## XXX TODO: Implement repetition detection, also return a struct
-##           describing the move as a sequence of moves/boards etc
+##
+##   The mechanics of playing a game using some
+##   strategy that will select the next move.
+##
+
 function play_game(strategy, max_rounds, io::IO = stdout)
     color = white
     game_is_won = false
@@ -56,11 +61,18 @@ function play_game(strategy, max_rounds, io::IO = stdout)
     return (outcome, move_history, board_history)
 end
 
+
+##
+##   A very simple gamplay strategy: Select a move at
+##   random among the available moves.
+##
+
+random_choice(board, moves) = moves[rand(1:length(moves))]
+
+
 # Play a hundred random games with no output, just to check that the
 # game mechanics isn't totally screwed up
 @test [play_game(random_choice, 5000, devnull) for x in 1:100] != nothing
-
-
 
 
 
