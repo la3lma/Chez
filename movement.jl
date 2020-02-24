@@ -69,9 +69,8 @@ coords = get_all_coords()
 # Get coordinates for all the pieces of a particular
 # color, these coordinates will then be used to generate
 # all possible moves for that color.
-function get_coords_for_pieces(color::Color, board::ChessBoard)
+get_coords_for_pieces(color::Color, board::ChessBoard) = 
    return filter(c -> (getPieceAt(board, c).color == color), coords)
-end
 
 
 #  Given an iterable of moves, will filter out anything that is not
@@ -185,50 +184,56 @@ function get_moves_from_ray(
     return result
 end
 
-get_moves_from_rays(directions::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false) = 
-    [ get_moves_from_ray(gen, color, board, coord, oneStepOnly) for gen in directions]
-
-
-bishop_ray_directions = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
-
-function get_moves_for_piece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord)
-	 get_moves_from_rays(bishop_ray_directions, color, board, coord)
-end
-
-rook_ray_directions = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 0)]
-
-function get_moves_for_piece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord)
-	 get_moves_from_rays(rook_ray_directions, color, board, coord)
-end
-
-
 flatten_moves(x) = x |> Iterators.flatten |> collect
 
-function get_royal_moves(color::Color, board::ChessBoard, coord::Coord,
-    oneStepOnly::Bool = false) return flatten_moves(
-    [get_moves_from_rays(bishop_ray_directions, color, board, coord,
-    oneStepOnly), get_moves_from_rays(rook_ray_directions, color, board,
-    coord, oneStepOnly)]) end
+get_moves_from_rays(directions::Array{Coord, 1}, color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false) = 
+    [ get_moves_from_ray(gen, color, board, coord, oneStepOnly) for gen in directions] |> flatten_moves
 
-is_legal_king_move(move::Move, board::ChessBoard) = false
 
-get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  get_royal_moves(color, board, coord, false)
+##
+##  Generating moves for specific pieces
+##
+
+knight_jumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
+ 	        Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
+diagonal_rays                = [Coord(1,1), Coord(-1,-1), Coord(-1, 1), Coord(1, -1)]
+vertical_and_horizontal_rays = [Coord(0,1), Coord(0,-1), Coord(1, 0), Coord(-1, 0)]
+royal_rays                   = vcat(diagonal_rays, vertical_and_horizontal_rays)
+
+
+get_moves_for_piece(piece::Knight, color::Color, board::ChessBoard, coord::Coord) =
+    moves_from_jumps(board, coord, knight_jumps, false)
+
+get_moves_for_piece(piece::Bishop, color::Color,  board::ChessBoard, coord::Coord) =
+   get_moves_from_rays(diagonal_rays, color, board, coord)
+
+get_moves_for_piece(piece::Rook, color::Color,  board::ChessBoard, coord::Coord) = 
+   get_moves_from_rays(vertical_and_horizontal_rays, color, board, coord)
+
+get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool = false) = 
+   get_moves_from_rays(royal_rays, color, board, coord, oneStepOnly)
+
+# This move is only legal if
+#  a) The king isn't getting close to another king
+#  b) It's not putting itself in a position where it can be captured
+#     immediately by the opponent (self-chec).
+
+find_coords_of_piece(board, piece) = filter(c -> (getPieceAt(board, c) == piece), coords)
+
+function is_legal_king_move(move::Move, board::ChessBoard)
+    other_king = king_of_color(other_color(move.startPiece.color))
+    okc = find_coords_of_piece(board, other_king)
+    kc  = move.destination
+    too_close = abs(kc.x-okc.x) == 1 || abs(kc.y-okc.y)
+
+    # XXX Missing check for self-check.
+    return !too_close
+end    
+
+get_moves_for_piece(piece::Queen, color::Color,  board::ChessBoard, coord::Coord) =  get_royal_moves(color, board, coord)
+
 get_moves_for_piece(piece::King, color::Color,  board::ChessBoard, coord::Coord) =
-      flatten_moves(get_royal_moves(color, board, coord, true)) |>   moves -> filter(m->is_legal_king_move(m, board), moves)
-
-
-knightJumps = [Coord(-2, 1), Coord(2, 1),   Coord(1, 2),    Coord(-1, 2),
- 	       Coord(2, -1), Coord(-2, -1), Coord(-1, -2),  Coord(1, -2)]
-
-function get_moves_for_piece(piece::Knight, color::Color, board::ChessBoard, coord::Coord)
-    moves_from_jumps(board, coord, knightJumps, false)
-end
-
-
-# this test shouldn't depend on the order of items in the list, it should treat
-# this as a test for collection equality
-@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == get_moves_for_piece(wk.piecetype, white,  startingBoard, b1)
-
+    filter(m->is_legal_king_move(m, board), get_royal_moves(color, board, coord, true))
 
 
 function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coord::Coord)
@@ -268,6 +273,9 @@ function get_moves_for_piece(piece::Pawn, color::Color,  board::ChessBoard, coor
   return moves
 end
 
+
+# A few simple smoketests to see if the basic mechanics works for pawns and knights.
+@test [ Move(b1, c3, false, wk, bs), Move(b1, a3, false, wk, bs)] == get_moves_for_piece(wk.piecetype, white,  startingBoard, b1)
 @test 2 == length(get_moves_for_piece(pawn,   white, startingBoard, a2))
 @test 2 == length(get_moves_for_piece(knight, white, startingBoard, b1))
 
@@ -278,8 +286,6 @@ end
 get_moves(color::Color, board::ChessBoard) =
     filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(startingBoard, c).piecetype, color, startingBoard, c)
                                for c in get_coords_for_pieces(color,startingBoard)]))
-
-
 
 # All the opening moves for pawns and horses
 @test 20 == length(get_moves(white, startingBoard))

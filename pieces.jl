@@ -35,6 +35,11 @@ black       = Color("Black", "b");
 white       = Color("White", "w");
 transparent = Color("Blank", " ");
 
+other_color(black)       = white
+other_color(white)       = black
+other_color(transparent) = transparent
+
+
 @test white == white
 @test white != black
 @test white != transparent
@@ -88,6 +93,13 @@ wq  = ChessPiece(white, queen,  "q", "♕");
 wki = ChessPiece(white, king,   "k", "♔");
 
 bs = ChessPiece(transparent, blank,  " ",  " ");
+
+
+function king_of_color(c::Color)
+      return c == white ? wki : 
+             c == black ? bki :
+             nothing
+end
 
 ## Printing pieces
 show(io::IO, cd::ChessPiece) = show(io, cd.printrep)

@@ -100,10 +100,8 @@ end
 @test coord_to_string(Coord(8,9)) == "Coord(8, 9)"
 
 
-function show(io::IO, m::Coord)
+show(io::IO, m::Coord) =  print(io, coord_to_string(m))
 
-    print(io, coord_to_string(m))
-end
 
 
 ## All coordinates, expanded for convenience
@@ -188,8 +186,11 @@ h8=Coord(8,8)
 
 #
 # Define coordinate equality
-
+#
 ==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
+
+
+
 
 @test Coord(3,3) == (Coord(1,1) + Coord(2,2))
 @test Coord(4,4) ==  2 * Coord(2,2)
@@ -212,3 +213,5 @@ end
 @test getPieceAt(startingBoard, Coord(4,1)) == wq
 @test getPieceAt(startingBoard, Coord(4,2)) == wp
 
+
+@test getPieceAt(startingBoard, Coord(5,8)) == bki
