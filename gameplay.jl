@@ -63,7 +63,7 @@ end
 
 
 ##
-##   A very simple gamplay strategy: Select a move at
+##   A very simple gameplay strategy: Select a move at
 ##   random among the available moves.
 ##
 
