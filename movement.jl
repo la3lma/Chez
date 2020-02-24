@@ -335,6 +335,18 @@ random_choice(board, moves) = moves[rand(1:length(moves))]
 # A simple player that will exercise the game playing mechanics.
 
 
+abstract type GameOutcome end
+struct Win   <: GameOutcome
+    winner:: Color 
+end
+
+struct Draw   <: GameOutcome end
+
+
+show(io::IO, w::Win) = show(io, @sprintf("Win by %s", w.winner))
+
+
+
 ## XXX TODO: Implement repetition detection, also return a struct
 ##           describing the move as a sequence of moves/boards etc
 function play_game(strategy, max_rounds, io::IO = stdout)
@@ -342,25 +354,37 @@ function play_game(strategy, max_rounds, io::IO = stdout)
     game_is_won = false
     round = 0
     board = startingBoard
-    
+    move_history = []
+    board_history = []
+    outcome = Draw()
+
     while (!game_is_won && round < max_rounds + 1)
         println(io, "Round " , round, " color ", color)
         available_moves = get_moves(color, board)
         if (!isempty(available_moves))
             println(io, "Number of moves available = ", length(available_moves))
+
             println(io, "Moves available = ", available_moves)
-            move = strategy(board, available_moves)
-            println(io, "Applying move ",  move)
-            board = apply_move!(move, board)
+            next_move = strategy(board, available_moves)
+            println(io, "Applying next_move ",  next_move)
+            board = apply_move!(next_move, board)
+            
+            push!(move_history, next_move)            
+            push!(board_history, board)
+
+            
             println(io, board)
-            game_is_won = captures_king(move)
+            game_is_won = captures_king(next_move)
             if game_is_won
                 println(io, "Game is won by ",  color)
+                outcome = Win(color)
             end
         end
         round += 1
         color = other_color(color)        
     end
+
+    return (outcome, move_history, board_history)
 end
 
 # Play a hundred random games with no output, just to check that the
