@@ -40,7 +40,7 @@ function play_game(strategy, max_rounds, io::IO = stdout)
             println(io, "Number of moves available = ", length(available_moves))
 
             println(io, "Moves available = ", available_moves)
-            next_move = strategy(board, available_moves)
+            next_move = strategy(board, available_moves, move_history, board_history)
             println(io, "Applying next_move ",  next_move)
             board = apply_move!(next_move, board)
             
@@ -67,7 +67,7 @@ end
 ##   random among the available moves.
 ##
 
-random_choice(board, moves) = moves[rand(1:length(moves))]
+random_choice(state, available_moves, action_history, state_history) = available_moves[rand(1:length(available_moves))]
 
 
 # Play a hundred random games with no output, just to check that the
@@ -88,3 +88,4 @@ using Plots
 
 plot_histogram_of_lengths_of_random_games = 
     histogram([length((play_game(random_choice, 5000, devnull))[2]) for x in 1:300], bins=:scott)
+
