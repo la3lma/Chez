@@ -29,12 +29,8 @@ end
 @test length(one_hot_encode_board(startingBoard)) ==  (13 * 64)
 
 
-# By default the method below returns 1×960 LinearAlgebra.Transpose{Float64,Array{Float64,1}}:
-# which for some reason isn't accepted as input to flux chains.
-
-function one_hot_encode_chess_state(state, move_being_queried, action_history, state_history) =
-    return collect(Iterators.flatten([one_hot_encode_board(state), one_hot_encode_move(move_being_queried)]))
-
+one_hot_encode_chess_state(state, move_being_queried, action_history, state_history) =
+     collect(Iterators.flatten([one_hot_encode_board(state), one_hot_encode_move(move_being_queried)]))
 
              
 @test length(one_hot_encode_chess_state(startingBoard, Move(Coord(1,1), Coord(2,2), false, bp, bp), nothing, nothing)) == 960
@@ -44,6 +40,45 @@ function one_hot_encode_chess_state(state, move_being_queried, action_history, s
 ##  Q-learning mechanics
 ##
 
+
+
+struct Q_learning_state
+    chain
+    cache::Dict
+end
+
+
+# Get an action-selection function connected to a q-learning instance.
+
+
+
+function new_q_choice(qs::Q_learning_state)
+
+    # Generate a new choice based on the evaluation in the network ("chain") in the
+    # qs learning state.
+    function get_q_choice(state,  available_moves, action_history, state_history)
+        function get_q_value(move)
+            encoded_state = one_hot_encode_chess_state(state, move, action_history, state_history)
+
+            result = nothing
+            if haskey(qs.cache, encoded_state)
+                result = qs.cache[encoded_state]
+            else
+                result = argmax(qs.chain(encoded_state))
+                println("Result = ", result)
+                qs.cache[encoded_state] = result
+            end
+            return result
+        end            
+
+        best_move_index = argmax(map(get_q_value, available_moves))
+        return available_moves[best_move_index]
+    end
+    
+    return get_q_choice
+end
+    
+    
 
 #discount_factor (0 < 𝛾 <= 1)
 𝛾 = 0.5
@@ -66,38 +101,17 @@ function one_hot_encode_chess_state(state, move_being_queried, action_history, s
 #  https://en.wikipedia.org/wiki/Q-learning
 # q_new(state_t, action_t) = q_old(state_t, action_t) + ɑ *  (reward + 𝛾 * (argmax_actions(a-> q_old(state_t, a)) - q_old(state_t, action_t)))
 
-# q_choice(state, availble_moves, action_history, state_history) = moves[rand(1:length(available_moves))]
 
-
-
-struct Q_learning_state
-    chain
-end
-
-
-# Get an action-selection function connected to a q-learning instance.
-
-zot =nothing
-
-function new_q_choice(qs::Q_learning_state)
-
-    # Generate a new choice based on the evaluation in the network ("chain") in the
-    # qs learning state.
-    function get_q_choice(state,  available_moves, action_history, state_history)
-        function get_q_value(move)
-            encoded_state = one_hot_encode_chess_state(state, move, action_history, state_history)
-            zot=encoded_state
-            return qs.chain(encoded_state)
-        end            
-
-         best_move_index = argmax(map(get_q_value, available_moves))
-        return available_moves[best_move_index]
-    end
-
-    return get_q_choice
-end
-
+    
 function q_learn!(q_state, episodes)
+
+    ## Cacheing can be useful here
+    function learn_from_episode(episode)
+        q_old(t) = q_state.chain(episode[1][t])
+        
+    end
+    
+        
     return nothing
 end
 
@@ -112,8 +126,9 @@ function q_learn_round(no_of_rounds = 2, no_of_episodes = 3, max_rounds_cutoff =
     q_state = Q_learning_state(
         Chain(
          Dense(960, 5, σ),
-         Dense(5, 2),
-         softmax)
+         Dense(5, 100),
+            softmax),
+        Dict{Array{Bool,1},Float32}()
     )
 
     for round in 1:no_of_rounds
