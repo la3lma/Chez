@@ -50,6 +50,19 @@ end
 
 # Get an action-selection function connected to a q-learning instance.
 
+function raw_q_lookup(qs::Q_learning_state, encoded_state)
+    if haskey(qs.cache, encoded_state)
+        return qs.cache[encoded_state]
+    else
+        result = argmax(qs.chain(encoded_state))
+        println("Result = ", result)
+        qs.cache[encoded_state] = result
+        return result
+    end
+end
+
+get_q_value(qs, state, move, action_history, state_history) =
+    raw_q_lookup(qs, one_hot_encode_chess_state(state, move, action_history, state_history))
 
 
 function new_q_choice(qs::Q_learning_state)
@@ -57,21 +70,8 @@ function new_q_choice(qs::Q_learning_state)
     # Generate a new choice based on the evaluation in the network ("chain") in the
     # qs learning state.
     function get_q_choice(state,  available_moves, action_history, state_history)
-        function get_q_value(move)
-            encoded_state = one_hot_encode_chess_state(state, move, action_history, state_history)
-
-            result = nothing
-            if haskey(qs.cache, encoded_state)
-                result = qs.cache[encoded_state]
-            else
-                result = argmax(qs.chain(encoded_state))
-                println("Result = ", result)
-                qs.cache[encoded_state] = result
-            end
-            return result
-        end            
-
-        best_move_index = argmax(map(get_q_value, available_moves))
+        get_q = move -> get_q_value(qs, state, move, action_history, state_history)
+        best_move_index = argmax(map(get_q, available_moves))
         return available_moves[best_move_index]
     end
     
@@ -124,6 +124,8 @@ end
 function q_learn_round(no_of_rounds = 2, no_of_episodes = 3, max_rounds_cutoff = 500)
 
     q_state = Q_learning_state(
+        # This chain is simply  a placeholder for a more realistic network
+        # to be evolved in the future.
         Chain(
          Dense(960, 5, σ),
          Dense(5, 100),
