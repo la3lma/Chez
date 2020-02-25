@@ -178,6 +178,11 @@ h5=Coord(8,5)
 h6=Coord(8,6)
 h7=Coord(8,7)
 h8=Coord(8,8)
+all_chessboard_locations = [a1, a2, a3, a4, a5, a6, a7, a8, b1, b2, b3, b4, b5, b6, b7, b8, c1,
+                       c2, c3, c4, c5, c6, c7, c8, d1, d2, d3, d4, d5, d6, d7, d8, e1, e2,
+                       e3, e4, e5, e6, e7, e8, f1, f2, f3, f4, f5, f6, f7, f8, g1, g2, g3,
+                       g4, g5, g6, g7, g8, h1, h2, h3, h4, h5, h6, h7, h8]
+
 
 #
 # Treat the set of coordinates as a linear space.
@@ -204,7 +209,7 @@ h8=Coord(8,8)
 @test !isValidCoord(Coord(0,2))
 @test !isValidCoord(Coord(1,0))
 
-function getPieceAt(board::ChessBoard, coord::Coord)
+function get_piece_at(board::ChessBoard, coord::Coord)
     return board.board[coord.y, coord.x]
 end
 
@@ -215,11 +220,11 @@ end
 
 
 # Check that the coordinates are not messed up
-@test getPieceAt(startingBoard, Coord(1,1)) == wr
-@test getPieceAt(startingBoard, Coord(2,1)) == wk
-@test getPieceAt(startingBoard, Coord(5,1)) == wki
-@test getPieceAt(startingBoard, Coord(4,1)) == wq
-@test getPieceAt(startingBoard, Coord(4,2)) == wp
+@test get_piece_at(startingBoard, Coord(1,1)) == wr
+@test get_piece_at(startingBoard, Coord(2,1)) == wk
+@test get_piece_at(startingBoard, Coord(5,1)) == wki
+@test get_piece_at(startingBoard, Coord(4,1)) == wq
+@test get_piece_at(startingBoard, Coord(4,2)) == wp
 
 
-@test getPieceAt(startingBoard, Coord(5,8)) == bki
+@test get_piece_at(startingBoard, Coord(5,8)) == bki

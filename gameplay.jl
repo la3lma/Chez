@@ -67,14 +67,14 @@ end
 ##   random among the available moves.
 ##
 
-random_choice(state, available_moves, action_history, state_history) = available_moves[rand(1:length(available_moves))]
+get_random_element(x) = x[rand(1:length(x))]
+
+random_choice(state, available_moves, action_history, state_history) = get_random_element(available_moves)
 
 
 # Play a hundred random games with no output, just to check that the
 # game mechanics isn't totally screwed up
 @test [play_game(random_choice, 5000, devnull) for x in 1:100] != nothing
-
-
 
 
 ##
@@ -84,8 +84,9 @@ random_choice(state, available_moves, action_history, state_history) = available
 
 play_random_game(rounds=50) = play_game(random_choice, rounds)
 
-using Plots
-
-plot_histogram_of_lengths_of_random_games = 
-    histogram([length((play_game(random_choice, 5000, devnull))[2]) for x in 1:300], bins=:scott)
-
+# XXX This fails, for some reason
+# using Plots
+#
+#function plot_game_length_histogram() 
+#    histogram([length((play_game(random_choice, 5000, devnull))[2]) for x in 1:300], bins=:scott)
+#end

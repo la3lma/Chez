@@ -95,6 +95,10 @@ wki = ChessPiece(white, king,   "k", "♔");
 
 bs = ChessPiece(transparent, blank,  " ",  " ");
 
+all_chess_pieces = [bp, br, bk, bb, bq, bki, wp, wr, wk, wb, wq, wki, bs]
+
+@test length(all_chess_pieces) == 13
+
 
 function king_of_color(c::Color)
       return c == white ? wki : 

@@ -104,7 +104,7 @@ coords = get_all_coords()
 # color, these coordinates will then be used to generate
 # all possible moves for that color.
 get_coords_for_pieces(color::Color, board::ChessBoard) = 
-   return filter(c -> (getPieceAt(board, c).color == color), coords)
+   return filter(c -> (get_piece_at(board, c).color == color), coords)
 
 
 #  Given an iterable of moves, will filter out anything that is not
@@ -134,8 +134,8 @@ function move_from_jump(board::ChessBoard, start::Coord, jump::Coord, requireCap
         return nothing
     end
 
-    destinationPiece = getPieceAt(board, destination)
-    startPiece = getPieceAt(board, start)
+    destinationPiece = get_piece_at(board, destination)
+    startPiece = get_piece_at(board, start)
 
     isLegalMove = destinationPiece.color != startPiece.color
     isCapture = isLegalMove && (destinationPiece.color != transparent)
@@ -165,10 +165,10 @@ function get_moves_from_ray(
     destination = start + direction
     result = []
     capture=false
-    startPiece = getPieceAt(board, start)
+    startPiece = get_piece_at(board, start)
 
     while (isValidCoord(destination) && !capture)
-        destinationPiece = getPieceAt(board, destination)
+        destinationPiece = get_piece_at(board, destination)
 
         # Is the piece at the destination the same as the
         # piece being move, if so break off. No more moves
@@ -256,7 +256,7 @@ get_royal_moves(color::Color, board::ChessBoard, coord::Coord, oneStepOnly::Bool
 #  b) It's not putting itself in a position where it can be captured
 #     immediately by the opponent (self-chec).
 
-find_coords_of_piece(board, piece) = filter(c -> (getPieceAt(board, c) == piece), coords)
+find_coords_of_piece(board, piece) = filter(c -> (get_piece_at(board, c) == piece), coords)
 
 function is_legal_king_move(move::Move, board::ChessBoard)
     println("is_legal_king_move")
@@ -319,7 +319,7 @@ end
 # the pieces for a particular color on the board.
 # Return an array (a set) of Move instances
 get_moves(color::Color, board::ChessBoard, drop_king_moves::Bool  = false) =
-    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(getPieceAt(board, c).piecetype, color,  board, c, drop_king_moves)
+    filter(m -> m isa Move, flatten_moves([get_moves_for_piece(get_piece_at(board, c).piecetype, color,  board, c, drop_king_moves)
                                for c in get_coords_for_pieces(color, board)]))
 
 # All the opening moves for pawns and horses
