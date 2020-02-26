@@ -66,7 +66,7 @@ function one_hot_encode_q(x)
     return result
 end
 
-function one_cold_encode_q(x)
+function one_cold_decode_q(x)
     idx = argmax(x)
     return  2*(idx/no_of_output_nodes_to_encode_q) - 1
 end
@@ -78,12 +78,7 @@ function raw_q_lookup(qs::Q_learning_state, encoded_statemove)
     if haskey(qs.cache, encoded_statemove)
         return qs.cache[encoded_statemove]
     else
-        # Some scaling magic on the result to keep it between
-        # -1 and 1
-        result = 2*(argmax(qs.chain(encoded_statemove))/no_of_output_nodes_to_encode_q) - 1.0
-
-
-        println("Result = ", result)
+        result = one_cold_decode_q(qs.chain(encoded_statemove))
         qs.cache[encoded_statemove] = result
         return result
     end
@@ -133,7 +128,6 @@ reward(x::Draw, color::Color) = 0
 reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 
 
-
 function q_learn!(qs, episodes)
 
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
@@ -157,7 +151,10 @@ function q_learn!(qs, episodes)
             esm    = one_hot_encode_chess_state(board, move)
             new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
             future_value_estimate = new_q
-            push!(learning_tuples, [esm, one_hot_encode_q(new_q)])
+            learning_tuple = [esm, one_hot_encode_q(new_q)]
+            flattened_learning_tuple = collect(Iterators.flatten(learning_tuple))
+            ## XX Start working here!!
+            push!(learning_tuples, flattened_learning_tuple)
          end
          return learning_tuples
     end
@@ -172,6 +169,8 @@ function q_learn!(qs, episodes)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     for data in learning_episodes
+        println("Training data ", typeof(data))
+        println("Training data[1] ", typeof(data[1]))
        Flux.train!(loss, ps, data, opt, cb = () -> println("training"))
     end
 end
