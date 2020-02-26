@@ -213,11 +213,13 @@ function q_learn!(qs, episodes)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     e = 0
+    println("   Training: ")
     for data in learning_episodes
         e += 1
-        println("  Training episode ",  e)
+        print(".")
         Flux.train!(loss, ps, data, opt)
     end
+    println()
 end
 
 
@@ -228,30 +230,50 @@ end
 
 
 using Plots
+using DataStructures
+
 function plot_game_length_histogram(episodes)
     # each episode has structure (outcome, move_history, board_history)
     lengths = [length(e[2]) for e in episodes]
     winners = [e[1] for e in episodes]
     println("histogram's lenghts = ", lengths)
-    println("histogram's winners = ", winners)
+    winner_strings = map(x -> show_string(x), winners)
+    counts = counter(winner_strings)
+    println("winner strings = ", counts)
+    # black_wins = counts("Win by Color(\"Black\", \"b\")")
+    # white_wins = counts("Win by Color(\"White\", \"w\")")
+    # draws = counts("Draw")
+    # white_fraction = white_wins / (black_wins + white_wins + draws )
+    # println("White fraction = ", white_fraction)
     histogram(lengths)
     # histogram(lengths, bins=:scott)
 end
 
 
 
-new_q_state() = Q_learning_state(
+new_q_state(chain  =  Chain(
+        Dense(960, 960, σ),
+        Dense(960, 400, σ),
+        Dense(400, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, no_of_output_nodes_to_encode_q),
+        softmax)) = Q_learning_state(
     # This chain is simply  a placeholder for a more realistic network
     # to be evolved in the future.
-    Chain(
-        Dense(960, 5, σ),
-        Dense(5, no_of_output_nodes_to_encode_q),
-        softmax),
+    chain,
     Dict{Array{Bool,1},Float32}()
 )
 
 
-function q_learn_round(no_of_rounds = 2, no_of_episodes = 30, max_rounds_cutoff = 500, q_state  = new_q_state())
+using BSON: @save
+using BSON: @load
+
+function q_learn_round(no_of_rounds = 200, no_of_episodes = 30, max_rounds_cutoff = 500, q_state  = new_q_state(), do_save = false, do_restore = false)
+
+    # if do_restore
+    #     @load "qlearn_chain.bson" chain
+    #     q_state = Q_learning_state(chain)
+    # end
     
     for round in 1:no_of_rounds
         println("Learning round ", round)
@@ -264,7 +286,10 @@ function q_learn_round(no_of_rounds = 2, no_of_episodes = 30, max_rounds_cutoff 
         plot_game_length_histogram(episodes)
         
         q_learn!(q_state, episodes)
+
+#        @save "qlearn_chain.bson" q_state.chain
     end
+    
     return q_state
 end
 

@@ -15,8 +15,11 @@ end
 
 struct Draw   <: GameOutcome end
 
-show(io::IO, w::Win) = show(io, @sprintf("Win by %s", w.winner))
-show(io::IO, w::Draw) = show(io, "Draw")
+show_string(w::Win)  =  @sprintf("Win by %s", w.winner)
+show_string(w::Draw) =  "Draw"
+
+
+show(io::IO, w::GameOutcome) = show(io, show_string(w))
 
 
 ##
