@@ -3,6 +3,14 @@
 ###
 
 
+## XXX Helper
+function printdim(label, x)
+    println("=> ", label, " type = ", typeof(x))
+    a,b = size(x)
+    println("=> ", label, " size = (", a,  ",", b, ")")
+end
+
+
 
 ##
 ##  One-hot coding of game state and moves.
@@ -60,18 +68,34 @@ end
 no_of_output_nodes_to_encode_q=100
 
 function one_hot_encode_q(x)
+    # println("one_hot_encode_q 1")
+    @assert (x >= -1) "$x >= -1 failed"
+    @assert (x <=  1) "$x <=  1 failed"
     idx = trunc(Int, no_of_output_nodes_to_encode_q * (x+1)/2)
-    result = zeros(no_of_output_nodes_to_encode_q)
+    @assert(idx > 0)
+    @assert(idx <= no_of_output_nodes_to_encode_q)
+    result = zeros(Bool, no_of_output_nodes_to_encode_q)
     result[idx] = 1
-    return result
+    # println("one_hot_encode_q 2")
+    r = permutedims(result)
+    # println("one_hot_encode_q 3")    
+    return r
 end
 
 function one_cold_decode_q(x)
+    decode_index(i::CartesianIndex) = i[2]
+    decode_index(i::Int) = i
+    
+    # println("one_hot_decode_q 1")    
+    # println("x = ", x)    
     idx = argmax(x)
+    # println("idx1 = ", idx)
+    idx = decode_index(idx)
+    # println("idx2 = ", idx)    
     return  2*(idx/no_of_output_nodes_to_encode_q) - 1
 end
 
-@test one_cold_encode_q(one_hot_encode_q(0.0)) == 0.0
+@test one_cold_decode_q(one_hot_encode_q(0.0)) == 0.0
 
 
 function raw_q_lookup(qs::Q_learning_state, encoded_statemove)
@@ -128,50 +152,50 @@ reward(x::Draw, color::Color) = 0
 reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 
 
-function q_learn!(qs, episodes)
+# Calulate what the Q-values should be based on the old q_values
+# that are present in qs, and present them as a
+# set of learning tuples, that can be interpreted as a
+# learning set for the qs.chain network
 
+function learn_from_episode(qs, episode)
+    
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
-
-    # Calulate what the Q-values should be based on the old q_values
-    # that are present in qs, and present them as a
-    # set of learning tuples, that can be interpreted as a
-    # learning set for the qs.chain network
-
-    function learn_from_episode(episode)
-        outcome, move_history, board_history = episode
-        episode_length = length(move_history)
-
-        learning_tuples = []
-        future_value_estimate = 0
-        for t in episode_length:-1:1
-            move   = move_history[t]
-            board  = board_history[t]
-            color  = get_piece_at(board, move.start).color # color == player
-            r      = t != episode_length ? 0 : reward(outcome, color)
-            esm    = one_hot_encode_chess_state(board, move)
-            new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
-            future_value_estimate = new_q
-            learning_tuple = [esm, one_hot_encode_q(new_q)]
-            flattened_learning_tuple = collect(Iterators.flatten(learning_tuple))
-            ## XX Start working here!!
-            push!(learning_tuples, flattened_learning_tuple)
-         end
-         return learning_tuples
+    
+    outcome, move_history, board_history = episode
+    episode_length = length(move_history)
+    
+    learning_tuples = []
+    future_value_estimate = 0
+    for t in episode_length:-1:1
+        move   = move_history[t]
+        board  = board_history[t]
+        color  = get_piece_at(board, move.start).color # color == player
+        r      = t != episode_length ? 0 : reward(outcome, color)
+        esm    = one_hot_encode_chess_state(board, move)
+        new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
+        future_value_estimate = new_q
+        onehot_q = one_hot_encode_q(new_q)
+        learning_tuple = [esm, onehot_q]
+        push!(learning_tuples, learning_tuple)
     end
+    return learning_tuples
+end
 
+
+function q_learn!(qs, episodes)
     wipe_cache!(qs)
 
-    learning_episodes = map(learn_from_episode, episodes)
+    learning_episodes = map(episode -> learn_from_episode(qs, episode), episodes)
 
-    # https://fluxml.ai/Flux.jl/stable/training/training/#Training-1
-    loss(x, y) = Flux.mse(qs.chain, y)
-    ps = Flux.params(qs.chain)
+    chain = qs.chain
+    loss(x, y) = Flux.mse(chain(x), y)
+    ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     for data in learning_episodes
-        println("Training data ", typeof(data))
-        println("Training data[1] ", typeof(data[1]))
-       Flux.train!(loss, ps, data, opt, cb = () -> println("training"))
+        # Trying with random data with knownf ormat, just to see where this is going
+        # data = [ (rand(960), rand(no_of_output_nodes_to_encode_q)) ]
+        Flux.train!(loss, ps, data, opt, cb = () -> println("training"))
     end
 end
 
