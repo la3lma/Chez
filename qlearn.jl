@@ -68,7 +68,6 @@ end
 no_of_output_nodes_to_encode_q=100
 
 function one_hot_encode_q(x)
-    # println("one_hot_encode_q 1")
     @assert (x >= -1) "$x >= -1 failed"
     @assert (x <=  1) "$x <=  1 failed"
     idx = trunc(Int, no_of_output_nodes_to_encode_q * (x+1)/2)
@@ -76,22 +75,15 @@ function one_hot_encode_q(x)
     @assert(idx <= no_of_output_nodes_to_encode_q)
     result = zeros(Bool, no_of_output_nodes_to_encode_q)
     result[idx] = 1
-    # println("one_hot_encode_q 2")
     r = permutedims(result)
-    # println("one_hot_encode_q 3")    
     return r
 end
 
 function one_cold_decode_q(x)
     decode_index(i::CartesianIndex) = i[2]
     decode_index(i::Int) = i
-    
-    # println("one_hot_decode_q 1")    
-    # println("x = ", x)    
     idx = argmax(x)
-    # println("idx1 = ", idx)
     idx = decode_index(idx)
-    # println("idx2 = ", idx)    
     return  2*(idx/no_of_output_nodes_to_encode_q) - 1
 end
 
@@ -173,8 +165,11 @@ function learn_from_episode(qs, episode)
         r      = t != episode_length ? 0 : reward(outcome, color)
         esm    = one_hot_encode_chess_state(board, move)
         new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
-        future_value_estimate = new_q
-        onehot_q = one_hot_encode_q(new_q)
+
+        # Since this is an adversarial game, every other
+        # round we need to flip the value estimate's sign
+        future_value_estimate = -new_q
+        onehot_q = one_hot_encode_q(sigmoid(new_q)* 2 - 1) #  Kludge
         learning_tuple = [esm, onehot_q]
         push!(learning_tuples, learning_tuple)
     end
@@ -192,8 +187,11 @@ function q_learn!(qs, episodes)
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
+    e = 0
     for data in learning_episodes
-        Flux.train!(loss, ps, data, opt, cb = () -> println("training"))
+        e += 1
+        println("Training episode ",  e)
+        Flux.train!(loss, ps, data, opt)
     end
 end
 
@@ -216,7 +214,7 @@ function q_learn_round(no_of_rounds = 2, no_of_episodes = 3, max_rounds_cutoff =
     )
 
     for round in 1:no_of_rounds
-
+        println("Learning round ", round)
         q_choice = new_q_choice(q_state)
 
         # Play some games so we get something to learn from
