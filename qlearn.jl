@@ -193,8 +193,6 @@ function q_learn!(qs, episodes)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     for data in learning_episodes
-        # Trying with random data with knownf ormat, just to see where this is going
-        # data = [ (rand(960), rand(no_of_output_nodes_to_encode_q)) ]
         Flux.train!(loss, ps, data, opt, cb = () -> println("training"))
     end
 end
