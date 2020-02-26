@@ -104,26 +104,35 @@ get_q_value(qs, state, move, action_history, state_history) =
     raw_q_lookup(qs, one_hot_encode_chess_state(state, move))
 
 
+# Find the maximm value in the sequence, then return
+# One of the indexes that contains that value
+function randomized_argmax(sequence)
+    (max_value, first_max_index) = findmax(sequence)
+    # Is sufficiently close to max
+    is_max(x) = abs(x - max_value) < 0.000000001
+    return findall(is_max, sequence) |> get_random_element
+end
+
+@test randomized_argmax([0; 0; 2; 3; 3; 2; 1]) >= 3
+@test randomized_argmax([0; 0; 2; 3; 3; 2; 1]) <= 5
+
 function new_q_choice(qs::Q_learning_state)
 
     # Generate a new choice based on the evaluation in the network ("chain") in the
     # qs learning state.
     function get_q_choice(state,  available_moves, action_history, state_history)
         get_q = move -> get_q_value(qs, state, move, action_history, state_history)
-        best_move_index = argmax(map(get_q, available_moves))
+
+        # XXX For now this is randomized with respect  to maximal moves,
+        #     but to explore it will be necessary to also explore some
+        #     non-optimal moves.
+        best_move_index = randomized_argmax(map(get_q, available_moves))
         return available_moves[best_move_index]
     end
 
     return get_q_choice
 end
 
-
-
-#discount_factor (0 < 𝛾 <= 1)
-𝛾 = 0.5
-
-# learning rate (0 < ɑ <= 1)
-𝛼 = 0.1
 
 
 # The state here must be:
@@ -151,6 +160,12 @@ reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 
 function learn_from_episode(qs, episode)
     
+    #discount_factor (0 < 𝛾 <= 1)
+    𝛾 = 0.5
+    
+    # learning rate (0 < ɑ <= 1)
+    𝛼 = 0.3
+
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
     
     outcome, move_history, board_history = episode
@@ -164,6 +179,9 @@ function learn_from_episode(qs, episode)
         color  = get_piece_at(board, move.start).color # color == player
         r      = t != episode_length ? 0 : reward(outcome, color)
         esm    = one_hot_encode_chess_state(board, move)
+
+
+        # Basic Q-learning formula
         new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
 
         # Since this is an adversarial game, every other
@@ -177,6 +195,12 @@ function learn_from_episode(qs, episode)
 end
 
 
+function one_hot_coded_q_values_difference(q1,q2)
+    v1 = one_hot_encode_q(q1)
+    v2 = one_hot_encode_q(q2)
+    return v1 - v2
+end
+
 function q_learn!(qs, episodes)
     wipe_cache!(qs)
 
@@ -184,13 +208,14 @@ function q_learn!(qs, episodes)
 
     chain = qs.chain
     loss(x, y) = Flux.mse(chain(x), y)
+    # loss(x, y) = one_hot_coded_q_values_difference(chain(x), y)
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     e = 0
     for data in learning_episodes
         e += 1
-        println("Training episode ",  e)
+        println("  Training episode ",  e)
         Flux.train!(loss, ps, data, opt)
     end
 end
@@ -201,18 +226,33 @@ end
 ##   Running the Q-learning mechanism
 ##
 
-function q_learn_round(no_of_rounds = 2, no_of_episodes = 3, max_rounds_cutoff = 500)
 
-    q_state = Q_learning_state(
-        # This chain is simply  a placeholder for a more realistic network
-        # to be evolved in the future.
-        Chain(
-         Dense(960, 5, σ),
-         Dense(5, no_of_output_nodes_to_encode_q),
-            softmax),
-        Dict{Array{Bool,1},Float32}()
-    )
+using Plots
+function plot_game_length_histogram(episodes)
+    # each episode has structure (outcome, move_history, board_history)
+    lengths = [length(e[2]) for e in episodes]
+    winners = [e[1] for e in episodes]
+    println("histogram's lenghts = ", lengths)
+    println("histogram's winners = ", winners)
+    histogram(lengths)
+    # histogram(lengths, bins=:scott)
+end
 
+
+
+new_q_state() = Q_learning_state(
+    # This chain is simply  a placeholder for a more realistic network
+    # to be evolved in the future.
+    Chain(
+        Dense(960, 5, σ),
+        Dense(5, no_of_output_nodes_to_encode_q),
+        softmax),
+    Dict{Array{Bool,1},Float32}()
+)
+
+
+function q_learn_round(no_of_rounds = 2, no_of_episodes = 30, max_rounds_cutoff = 500, q_state  = new_q_state())
+    
     for round in 1:no_of_rounds
         println("Learning round ", round)
         q_choice = new_q_choice(q_state)
@@ -220,6 +260,9 @@ function q_learn_round(no_of_rounds = 2, no_of_episodes = 3, max_rounds_cutoff =
         # Play some games so we get something to learn from
         episodes = [play_game(q_choice, max_rounds_cutoff, devnull) for x in 1:no_of_episodes]
 
+        # Plot the distribution of lengths of games (won/draw ratio would also be of interest over time)
+        plot_game_length_histogram(episodes)
+        
         q_learn!(q_state, episodes)
     end
     return q_state
