@@ -149,8 +149,15 @@ end
 #  https://en.wikipedia.org/wiki/Q-learning
 # q_new(state_t, action_t) = q_old(state_t, action_t) + 𝛼 *  (reward + 𝛾 * (argmax_actions(a-> q_old(state_t+1, a)) - q_old(state_t, action_t)))
 
+#
+#  Also think about https://en.wikipedia.org/wiki/State%E2%80%93action%E2%80%93reward%E2%80%93state%E2%80%93action
+#
+
 reward(x::Draw, color::Color) = 0
 reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
+
+
+
 
 
 # Calulate what the Q-values should be based on the old q_values
@@ -158,14 +165,9 @@ reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 # set of learning tuples, that can be interpreted as a
 # learning set for the qs.chain network
 
+
 function learn_from_episode(qs, episode)
     
-    #discount_factor (0 < 𝛾 <= 1)
-    𝛾 = 0.5
-    
-    # learning rate (0 < ɑ <= 1)
-    𝛼 = 0.3
-
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
     
     outcome, move_history, board_history = episode
@@ -173,21 +175,41 @@ function learn_from_episode(qs, episode)
     
     learning_tuples = []
     future_value_estimate = 0
+
+    # Impact on first position
+    impact1 = 1/episode_length
+    
+    #discount_factor (0 < 𝛾 <= 1)
+    #  ... the discount factor is tuned soo that the
+    # the impact isn't  too small
+    𝛾 = (1/episode_length)^(1/episode_length)
+
+    println("𝛾 = $𝛾")
+    
+    # learning rate (0 < ɑ <= 1)
+    𝛼 = 0.3
+    
     for t in episode_length:-1:1
+
         move   = move_history[t]
         board  = board_history[t]
         color  = get_piece_at(board, move.start).color # color == player
         r      = t != episode_length ? 0 : reward(outcome, color)
         esm    = one_hot_encode_chess_state(board, move)
 
-
         # Basic Q-learning formula
         new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
 
         # Since this is an adversarial game, every other
         # round we need to flip the value estimate's sign
-        future_value_estimate = -new_q
-        onehot_q = one_hot_encode_q(sigmoid(new_q)* 2 - 1) #  Kludge
+        future_value_estimate = - new_q
+        # Kludge to avoid the q value going above 1 (which may or may not
+        # be very important to do.
+
+        q_to_encode = 2*sigmoid(new_q) - 1
+        println("Episode $t has q to encode = $q_to_encode")
+        
+        onehot_q = one_hot_encode_q(q_to_encode)
         learning_tuple = [esm, onehot_q]
         push!(learning_tuples, learning_tuple)
     end
@@ -212,10 +234,8 @@ function q_learn!(qs, episodes)
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
-    e = 0
-    println("   Training: ")
+    print("   Training: ")
     for data in learning_episodes
-        e += 1
         print(".")
         Flux.train!(loss, ps, data, opt)
     end
@@ -252,21 +272,26 @@ end
 
 
 new_q_state(chain  =  Chain(
-        Dense(960, 960, σ),
-        Dense(960, 400, σ),
-        Dense(400, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, no_of_output_nodes_to_encode_q),
-        softmax)) = Q_learning_state(
-    # This chain is simply  a placeholder for a more realistic network
-    # to be evolved in the future.
-    chain,
-    Dict{Array{Bool,1},Float32}()
-)
+    Dense(960, 960, σ),
+    Dense(960, 400, σ),
+    Dense(400, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, 200, σ),
+    Dense(200, no_of_output_nodes_to_encode_q),
+    softmax)) = Q_learning_state(
+        # This chain is simply  a placeholder for a more realistic network
+        # to be evolved in the future.
+        chain,
+        Dict{Array{Bool,1},Float32}()
+    )
 
 
-using BSON: @save
-using BSON: @load
+# using BSON: @save
+# using BSON: @load
 
 function q_learn_round(no_of_rounds = 200, no_of_episodes = 30, max_rounds_cutoff = 500, q_state  = new_q_state(), do_save = false, do_restore = false)
 
