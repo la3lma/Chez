@@ -99,3 +99,8 @@ https://towardsdatascience.com/from-scratch-implementation-of-alphazero-for-conn
 https://makerspace.aisingapore.org/2019/04/from-scratch-implementation-of-alphazero-for-connect4/
 https://timmccloud.net/blog-alphafour-understanding-googles-alphazero-with-connect-4/
 
+
+Chessboards
+==
+
+Consider using http://chessboardjs.com/docs to add som real chessboard action.
