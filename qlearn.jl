@@ -321,3 +321,8 @@ end
 
 # Smoketest that will discover many weird errors.
 @test q_learn_round() != nothing
+
+## TODO:   Write a q-learning implementation that is learning by playing tournaments do the A/B swap
+##         trick, and clonw when the B player, that is currently learning, is winning 55% of the tournament
+##         games.
+
