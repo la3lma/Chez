@@ -63,6 +63,12 @@ over time.   Some ideas are:
    over time, across classes of games, and instances of games.
  * Don't be cute, use denormalized tables, one per metric,
 
+
+Finally.  It's getting lonely.  I need to find some forum to discuss
+this stuff in.  I need someone to play ball with, bounce ideas off,
+get feedback, also rubber duck.
+
+
 Strategy development
 ==
 
