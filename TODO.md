@@ -85,19 +85,19 @@ Strategy development
 
 References
 ===
-https://github.com/tensorflow/minigo
-https://arxiv.org/pdf/2001.09318.pdf
-https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/
-https://web.stanford.edu/~surag/posts/alphazero.html
+* https://github.com/tensorflow/minigo
+* https://arxiv.org/pdf/2001.09318.pdf
+* https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/
+* https://web.stanford.edu/~surag/posts/alphazero.html
 
 
 Four in a row
 ==
 
-https://medium.com/@sleepsonthefloor/azfour-a-connect-four-webapp-powered-by-the-alphazero-algorithm-d0c82d6f3ae9
-https://towardsdatascience.com/from-scratch-implementation-of-alphazero-for-connect4-f73d4554002a
-https://makerspace.aisingapore.org/2019/04/from-scratch-implementation-of-alphazero-for-connect4/
-https://timmccloud.net/blog-alphafour-understanding-googles-alphazero-with-connect-4/
+* https://medium.com/@sleepsonthefloor/azfour-a-connect-four-webapp-powered-by-the-alphazero-algorithm-d0c82d6f3ae9
+* https://towardsdatascience.com/from-scratch-implementation-of-alphazero-for-connect4-f73d4554002a
+* https://makerspace.aisingapore.org/2019/04/from-scratch-implementation-of-alphazero-for-connect4/
+* https://timmccloud.net/blog-alphafour-understanding-googles-alphazero-with-connect-4/
 
 
 Chessboards
