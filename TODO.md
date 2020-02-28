@@ -8,6 +8,61 @@ Game mechanics
 * Implement en-passant
 
 
+Reflection on the current state
+==
+
+I do have a halfway decent implementation of the game mechanics of
+chess. It doesn't have rookings, en passant or draw by repetition
+implemented, but that can be added by spending time, and it will not
+change any external interfaces.  I'm not giving that much priority
+now.  Efficiency can obviously be improved, but I'm also not giving
+that any priority now.
+
+What I don't have at all is a functioning reinforcement learning
+setup, so I need to work on that.  Chess is a complicated game with
+high move fan-out that takes some time to play so it may be worth it
+to experiment with the reinforcement learning strategies on a simpler
+game, but to make sure that the chess game can be plugged in an run on
+it at any time (keep that as an unit test)
+
+There are a few chess-specific pieces of code in the reinforecement
+learning thing, and weeding those out will in themselves be useful.
+
+Now, using a simpler game, like "four in a row" will also make it
+possible to learn from other people's work (see some references
+below).  That will obviously be useful too.
+
+One change that will need to be implemented very soon, and could be
+done using the existing chess machinery as a mock for future games, is
+to set up tournaments with players.  The players will have state
+represented as a set of neural networks, and a few identifying bits.
+Alphago apparently trains itself (find reference) by starting with two
+identical models, then playing a mutating version of itself against a
+static version.  When the mutating version has a 55% win rate over the
+static version, the mutating version is cloned and becomes its own
+static version, and the cycle repeats. Something like that.
+
+The actual Q-learning, SARSA, position/move evaluation whatever
+algorithms that are plugged in, with whatever generic heuristics
+can be added, needs to be _crystal_clear_.   The current
+implementation of "q-learning" (which has already mutated)
+is quickly getting messy.  That cannot be permitted to happen.
+The core algorithm must be crystal clear for the reader, and the
+rest of the supporting software must enable this clarity.
+
+Finally, but not least importantly: I need to add instrumentation to
+track progress.  It is nice to get little printouts as we move along,
+but it is also important to log performance over time in an orderly
+consistent manner, and to be able to plot evolution of performance
+over time.   Some ideas are:
+
+ * Use sqlite or the julia-native database thing to log values.
+ * Read the Q-learning papers (and other) and shamelessly copy
+   their metrics and graphs.  Reproduce them.
+ * Use these metrics to track progress of the learning algorithms
+   over time, across classes of games, and instances of games.
+ * Don't be cute, use denormalized tables, one per metric,
+
 Strategy development
 ==
 
@@ -20,59 +75,21 @@ Strategy development
    - Find a way to make this architecture learn by playing against itself.
    - => Alpha zero light
 
-Practical next moves
+
+
+References
+===
+https://github.com/tensorflow/minigo
+https://arxiv.org/pdf/2001.09318.pdf
+https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/
+https://web.stanford.edu/~surag/posts/alphazero.html
+
+
+Four in a row
 ==
 
-qlearn.jl currently fails to load due to the error below, and that
-must be fixed.  I don't really know what the cause is, but it seems
-like it's some type of array dimenison or type mismatch.  It could be
-that the input feature vector is a vector of float64 values, but
-Flux.jl requires float32 values (or maybe it doesn't I don't really
-know).
+https://medium.com/@sleepsonthefloor/azfour-a-connect-four-webapp-powered-by-the-alphazero-algorithm-d0c82d6f3ae9
+https://towardsdatascience.com/from-scratch-implementation-of-alphazero-for-connect4-f73d4554002a
+https://makerspace.aisingapore.org/2019/04/from-scratch-implementation-of-alphazero-for-connect4/
+https://timmccloud.net/blog-alphafour-understanding-googles-alphazero-with-connect-4/
 
-Anyhow, this is where the game is today, and this is the next hurdle that
-needs to be overcome.
-
-
-
-     julia> include("qlearn.jl")
-     Error During Test at /Users/rmz/git/AI/chezjulia/qlearn.jl:124
-       Test threw exception
-       Expression: q_learn_round() != nothing
-       DimensionMismatch("A has dimensions (1,960) but B has dimensions (1,960)")
-       Stacktrace:
-	[1] gemm_wrapper!(::Array{Float32,2}, ::Char, ::Char, ::Array{Float32,2}, ::Array{Float32,2}, ::LinearAlgebra.MulAddMul{true,true,Float32,Float32}) at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/LinearAlgebra/src/matmul.jl:545
-	[2] mul! at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/LinearAlgebra/src/matmul.jl:160 [inlined]
-	[3] mul! at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/LinearAlgebra/src/matmul.jl:203 [inlined]
-	[4] * at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/LinearAlgebra/src/matmul.jl:153 [inlined]
-	[5] (::Dense{typeof(σ),Array{Float32,2},Array{Float32,1}})(::Array{Float32,2}) at /Users/rmz/.julia/packages/Flux/2i5P1/src/layers/basic.jl:102
-	[6] Dense at /Users/rmz/.julia/packages/Flux/2i5P1/src/layers/basic.jl:113 [inlined]
-	[7] (::Dense{typeof(σ),Array{Float32,2},Array{Float32,1}})(::LinearAlgebra.Transpose{Float64,Array{Float64,1}}) at /Users/rmz/.julia/packages/Flux/2i5P1/src/layers/basic.jl:116
-	[8] (::Chain{Tuple{Dense{typeof(σ),Array{Float32,2},Array{Float32,1}},Dense{typeof(identity),Array{Float32,2},Array{Float32,1}},typeof(softmax)}})(::LinearAlgebra.Transpose{Float64,Array{Float64,1}}) at /Users/rmz/.julia/packages/Flux/2i5P1/src/layers/basic.jl:30
-	[9] (::var"#get_q_value#107"{ChessBoard,Array{Any,1},Array{Any,1},Q_learning_state})(::Move) at /Users/rmz/git/AI/chezjulia/qlearn.jl:83
-	[10] iterate at ./generator.jl:47 [inlined]
-	[11] _collect(::Array{Any,1}, ::Base.Generator{Array{Any,1},var"#get_q_value#107"{ChessBoard,Array{Any,1},Array{Any,1},Q_learning_state}}, ::Base.EltypeUnknown, ::Base.HasShape{1}) at ./array.jl:635
-	[12] collect_similar at ./array.jl:564 [inlined]
-	[13] map at ./abstractarray.jl:2073 [inlined]
-	[14] (::var"#get_q_choice#106"{Q_learning_state})(::ChessBoard, ::Array{Any,1}, ::Array{Any,1}, ::Array{Any,1}) at /Users/rmz/git/AI/chezjulia/qlearn.jl:86
-	[15] play_game(::var"#get_q_choice#106"{Q_learning_state}, ::Int64, ::Base.DevNull) at /Users/rmz/git/AI/chezjulia/gameplay.jl:43
-	[16] #108 at ./none:0 [inlined]
-	[17] iterate at ./generator.jl:47 [inlined]
-	[18] collect(::Base.Generator{UnitRange{Int64},var"#108#109"{Int64,var"#get_q_choice#106"{Q_learning_state}}}) at ./array.jl:622
-	[19] q_learn_round(::Int64, ::Int64, ::Int64) at /Users/rmz/git/AI/chezjulia/qlearn.jl:114
-	[20] q_learn_round() at /Users/rmz/git/AI/chezjulia/qlearn.jl:105
-	[21] top-level scope at /Users/rmz/git/AI/chezjulia/qlearn.jl:124
-	[22] include at ./boot.jl:328 [inlined]
-	[23] include_relative(::Module, ::String) at ./loading.jl:1105
-	[24] include(::Module, ::String) at ./Base.jl:31
-	[25] include(::String) at ./client.jl:424
-	[26] top-level scope at REPL[9]:1
-	[27] eval(::Module, ::Any) at ./boot.jl:330
-	[28] eval_user_input(::Any, ::REPL.REPLBackend) at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/REPL/src/REPL.jl:86
-	[29] macro expansion at /Users/julia/buildbot/worker/package_macos64/build/usr/share/julia/stdlib/v1.3/REPL/src/REPL.jl:118 [inlined]
-	[30] (::REPL.var"#26#27"{REPL.REPLBackend})() at ./task.jl:333
-
-     ERROR: LoadError: There was an error during testing
-     in expression starting at /Users/rmz/git/AI/chezjulia/qlearn.jl:124
-
-     julia> 
