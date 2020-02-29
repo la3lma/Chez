@@ -368,7 +368,7 @@ end
 ##  clone of itself.   This way the learning player will always be matched
 ##  be an equally good, or almost as good player as itself is.
 ##
-function tournament_learning(no_of_tournaments=3)
+function tournament_learning(no_of_tournaments=3, cloning_trigger = 0.55)
     random_player   = Player("random player 1", random_choice, nothing)
     
     initial_q_player  = new_q_player("Initial q player")
