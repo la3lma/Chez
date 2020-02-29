@@ -193,7 +193,7 @@ function learn_from_episode(qs, episode)
 
         move   = move_history[t]
         board  = board_history[t]
-        color  = get_piece_at(board, move.start).color # color == player
+        color  = get_piece_at(board, move.start).color # color == player, in chess.  Need to generalize that.
         r      = t != episode_length ? 0 : reward(outcome, color)
         esm    = one_hot_encode_chess_state(board, move)
 
@@ -293,7 +293,7 @@ new_q_state(chain  =  Chain(
 # using BSON: @save
 # using BSON: @load
 
-function q_learn_round(no_of_rounds = 200, no_of_episodes = 30, max_rounds_cutoff = 500, q_state  = new_q_state(), do_save = false, do_restore = false)
+function q_learn_round(no_of_rounds = 20, no_of_episodes = 30, max_rounds_cutoff = 200, q_state  = new_q_state(), do_save = false, do_restore = false)
 
     # if do_restore
     #     @load "qlearn_chain.bson" chain
@@ -319,8 +319,86 @@ function q_learn_round(no_of_rounds = 200, no_of_episodes = 30, max_rounds_cutof
 end
 
 
+###
+###  Next generation tournament-based players
+###  (when this works, refactor much of the code above into oblivion)
+###
+
+function new_q_player(name)
+    qs = new_q_state()
+    strategy = new_q_choice(qs)
+    return Player(name, strategy, qs)
+end
+
+clone_q_state(qs) = Q_learning_state(deepcopy(qs.chain), Dict{Array{Bool,1},Float32}())
+
+function clone_q_player(name, qp)
+    qs = clone_q_state(qp.state)
+    strategy = new_q_choice(qs)
+    return Player(name, strategy, qs)    
+end
+
+function q_learn_tournament_result(learning_player, tournament_result)
+    episodes = [tournament_result[2:length(tournament_result)]]
+    q_learn!(learning_player.state, episodes)
+end
+
+
+did_player_win(game, player) =   game[3].player == player
+
+
+function count_wins_for_player(tournament_result, player)
+    sum([did_player_win(x, player) for x in tournament_result])    
+end
+
+
+function evaluate_tournament(p1, p2, tournament_result)
+    p1w = count_wins_for_player(tournament_result, p1)
+    p2w = count_wins_for_player(tournament_result, p2)
+    return p2w / (p1w + p2w)
+end
+
+##
+##  Tournament learning.  Starting with one random player and
+##  one learning player.  Until the required number of tournaments has
+##  been run, play the players against each other. Let the learning player
+##  learn until it beats the non-learning player in 55% or more of the
+##  games in the tournament.  At that point clone the learning player
+##  and let it continue the tournament learning by playing against a non-learning
+##  clone of itself.   This way the learning player will always be matched
+##  be an equally good, or almost as good player as itself is.
+##
+function tournament_learning(no_of_tournaments=3)
+    random_player   = Player("random player 1", random_choice, nothing)
+    
+    initial_q_player  = new_q_player("Initial q player")
+
+    # Using the random player to bootstrap here. Could equally well
+    # have used an initial clone of the initial_q_player.
+    (p1, p2) = (random_player, initial_q_player)
+    generation = 2
+    for tournament in 1:no_of_tournaments
+        tournament_result     = play_tournament(p1, p2)
+        p2_advantage = evaluate_tournament(p1, p2, tournament_result)
+
+        if (p2_advantage >= 0.55)
+            p1name = p1.id
+            p2name = p2.id
+            println("p2 ($p2name, learning) has a $p2_advantage, cloning it into p1 ($p1name, static)")
+            p1 = clone_q_player("Clone $generation q-playe", p2)
+            generation += 1
+        else
+            q_learn_tournament_result(p2, tournament_result)
+        end
+    end
+    return p2
+end
+
+@test tournament_learning() != nothing
+
+
 # Smoketest that will discover many weird errors.
-@test q_learn_round() != nothing
+#@test q_learn_round() != nothing
 
 ## TODO:   Write a q-learning implementation that is learning by playing tournaments do the A/B swap
 ##         trick, and clonw when the B player, that is currently learning, is winning 55% of the tournament

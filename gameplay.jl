@@ -2,6 +2,15 @@
 ### Gameplay
 ###
 
+##
+## Players, holding strategies and evolving some state
+##
+struct Player
+    id::String
+    strategy
+    state
+end
+
 
 
 
@@ -11,6 +20,7 @@
 abstract type GameOutcome end
 struct Win   <: GameOutcome
     winner:: Color
+    player:: Player
 end
 
 struct Draw   <: GameOutcome end
@@ -54,7 +64,7 @@ function play_game(strategy, max_rounds, io::IO = stdout)
             game_is_won = captures_king(next_move)
             if game_is_won
                 println(io, "Game is won by ",  color)
-                outcome = Win(color)
+                outcome = Win(color, Player("Not a real player", nothing, nothing))
             end
         end
         round += 1
@@ -71,7 +81,8 @@ end
 
 get_random_element(x) = x[rand(1:length(x))]
 
-random_choice(state, available_moves, action_history, state_history) = get_random_element(available_moves)
+random_choice(state, available_moves, action_history, state_history) =
+    get_random_element(available_moves)
 
 
 # Play a hundred random games with no output, just to check that the
@@ -98,11 +109,6 @@ play_random_game(rounds=50) = play_game(random_choice, rounds)
 ###  Tournament play (for pitting two competitors against each other)
 ###
 
-struct Player
-    id::String
-    strategy
-end
-
 
 function play_tournament(player1::Player, player2::Player, max_rounds=200, tournament_length = 10, io::IO = devnull)
 
@@ -114,10 +120,11 @@ function play_tournament(player1::Player, player2::Player, max_rounds=200, tourn
     board_history = []
     outcome = Draw()
 
-
     function play_game(p1, p2)
-        (active_strategy, inactive_strategy) = (p1.strategy, p2.strategy)
+        (active_player, inactive_player) = (p1, p2)
+        
         while (!game_is_won && round < max_rounds + 1)
+            active_strategy = active_player.strategy
             println(io, "Round " , round, " color ", color)
             available_moves = get_moves(color, board)
             if (!isempty(available_moves))
@@ -135,12 +142,12 @@ function play_tournament(player1::Player, player2::Player, max_rounds=200, tourn
                 game_is_won = captures_king(next_move)
                 if game_is_won
                     println(io, "Game is won by ",  color)
-                    outcome = Win(color)
+                    outcome = Win(color, active_player)
                 end
             end
             round += 1
             color = other_color(color)
-            (active_strategy, inactive_strategy) = (inactive_strategy, active_strategy)
+            (active_player, inactive_player) = (inactive_player, active_player)
         end
         return (p1, p2, outcome, move_history, board_history)
     end
@@ -158,9 +165,8 @@ function play_tournament(player1::Player, player2::Player, max_rounds=200, tourn
 end
 
 
-
-random_player_1 = Player("random player 1", random_choice)
-random_player_2 = Player("random player 2", random_choice)
+random_player_1 = Player("random player 1", random_choice, nothing)
+random_player_2 = Player("random player 2", random_choice, nothing)
 
 println("Playing tournament")
 @test play_tournament(random_player_1, random_player_2) != nothing
