@@ -384,8 +384,8 @@ function tournament_learning(no_of_tournaments=3, cloning_trigger = 0.55)
         if (p2_advantage >= 0.55)
             p1name = p1.id
             p2name = p2.id
-            println("p2 ($p2name, learning) has a $p2_advantage, cloning it into p1 ($p1name, static)")
-            p1 = clone_q_player("Clone $generation q-playe", p2)
+            println("p2 ($p2name, learning) has a $p2_advantage, so cloning it into p1 ($p1name, static)")
+            p1 = clone_q_player("Clone $generation q-player", p2)
             generation += 1
         else
             q_learn_tournament_result(p2, tournament_result)
