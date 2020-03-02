@@ -81,7 +81,11 @@ Strategy development
    - Find a way to make this architecture learn by playing against itself.
    - => Alpha zero light
 
+Tactical (development, software engineering) improvements
+==
 
+* Stop using untyped touples holding game/tournament results. Use structs with
+  named types and named components
 
 References
 ===
