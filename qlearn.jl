@@ -11,7 +11,6 @@ function printdim(label, x)
 end
 
 
-
 ##
 ##  One-hot coding of game state and moves.
 ##
@@ -157,7 +156,10 @@ reward(x::Draw, color::Color) = 0
 reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 
 
-
+## XXX Once this works, remove the first
+##     definition and only use the last one.
+deconstruct_episode(episode::Any) = episode
+deconstruct_episode(r::Game_Result) = (r.outcome, r.move_history, r.board_history)
 
 
 # Calulate what the Q-values should be based on the old q_values
@@ -169,8 +171,11 @@ reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 function learn_from_episode(qs, episode)
     
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
+
     
-    outcome, move_history, board_history = episode
+    # Destructuring!
+    outcome, move_history, board_history = deconstruct_episode(episode)
+
     episode_length = length(move_history)
     
     learning_tuples = []
@@ -184,7 +189,7 @@ function learn_from_episode(qs, episode)
     # the impact isn't  too small
     𝛾 = (1/episode_length)^(1/episode_length)
 
-    println("𝛾 = $𝛾")
+    # println("𝛾 = $𝛾")
     
     # learning rate (0 < ɑ <= 1)
     𝛼 = 0.3
@@ -207,7 +212,7 @@ function learn_from_episode(qs, episode)
         # be very important to do.
 
         q_to_encode = 2*sigmoid(new_q) - 1
-        println("Episode $t has q to encode = $q_to_encode")
+        #    println("Episode $t has q to encode = $q_to_encode")
         
         onehot_q = one_hot_encode_q(q_to_encode)
         learning_tuple = [esm, onehot_q]
@@ -225,6 +230,8 @@ end
 
 function q_learn!(qs, episodes)
     wipe_cache!(qs)
+
+    println("Q-learning")
 
     learning_episodes = map(episode -> learn_from_episode(qs, episode), episodes)
 
@@ -338,25 +345,11 @@ function clone_q_player(name, qp)
     return Player(name, strategy, qs)    
 end
 
-function q_learn_tournament_result(learning_player, tournament_result)
-    episodes = [tournament_result[2:length(tournament_result)]]
-    q_learn!(learning_player.state, episodes)
+function q_learn_tournament_result!(learning_player, tournament_result)
+    println("Typeof games = ",  typeof(tournament_result.games))
+    q_learn!(learning_player.state,  tournament_result.games)
 end
 
-
-did_player_win(game, player) =   game[3].player == player
-
-
-function count_wins_for_player(tournament_result, player)
-    sum([did_player_win(x, player) for x in tournament_result])    
-end
-
-
-function evaluate_tournament(p1, p2, tournament_result)
-    p1w = count_wins_for_player(tournament_result, p1)
-    p2w = count_wins_for_player(tournament_result, p2)
-    return p2w / (p1w + p2w)
-end
 
 ##
 ##  Tournament learning.  Starting with one random player and
@@ -368,27 +361,41 @@ end
 ##  clone of itself.   This way the learning player will always be matched
 ##  be an equally good, or almost as good player as itself is.
 ##
-function tournament_learning(no_of_tournaments=3, cloning_trigger = 0.55)
+function tournament_learning(
+    no_of_tournaments=4,
+    cloning_trigger = 0.55,
+    max_rounds_in_tournament_games=200,
+    tournament_length = 10)
+    
     random_player   = Player("random player 1", random_choice, nothing)
     
     initial_q_player  = new_q_player("Initial q player")
-
+    
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
     (p1, p2) = (random_player, initial_q_player)
     generation = 2
     for tournament in 1:no_of_tournaments
-        tournament_result     = play_tournament(p1, p2)
-        p2_advantage = evaluate_tournament(p1, p2, tournament_result)
 
-        if (p2_advantage >= 0.55)
+        println("Playing a tournament")        
+        tournament_result     = play_tournament(
+            p1,
+            p2,
+            max_rounds_in_tournament_games,
+            tournament_length)
+        
+        p2_advantage = p2_win_ratio(tournament_result)
+        println("p2_advantage = $p2_advantage")
+
+        if (p2_advantage >= cloning_trigger)
+    
             p1name = p1.id
             p2name = p2.id
-            println("p2 ($p2name, learning) has a $p2_advantage, so cloning it into p1 ($p1name, static)")
+            println("p2 ($p2name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1name, static)")
             p1 = clone_q_player("Clone $generation q-player", p2)
             generation += 1
         else
-            q_learn_tournament_result(p2, tournament_result)
+            q_learn_tournament_result!(p2, tournament_result)
         end
     end
     return p2
