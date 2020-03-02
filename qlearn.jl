@@ -169,31 +169,31 @@ deconstruct_episode(r::Game_Result) = (r.outcome, r.move_history, r.board_histor
 
 
 function learn_from_episode(qs, episode)
-    
+
     q_old(encoded_statemove) = raw_q_lookup(qs, encoded_statemove)
 
-    
+
     # Destructuring!
     outcome, move_history, board_history = deconstruct_episode(episode)
 
     episode_length = length(move_history)
-    
+
     learning_tuples = []
     future_value_estimate = 0
 
     # Impact on first position
     impact1 = 1/episode_length
-    
+
     #discount_factor (0 < 𝛾 <= 1)
     #  ... the discount factor is tuned soo that the
     # the impact isn't  too small
     𝛾 = (1/episode_length)^(1/episode_length)
 
     # println("𝛾 = $𝛾")
-    
+
     # learning rate (0 < ɑ <= 1)
     𝛼 = 0.3
-    
+
     for t in episode_length:-1:1
 
         move   = move_history[t]
@@ -213,7 +213,7 @@ function learn_from_episode(qs, episode)
 
         q_to_encode = 2*sigmoid(new_q) - 1
         #    println("Episode $t has q to encode = $q_to_encode")
-        
+
         onehot_q = one_hot_encode_q(q_to_encode)
         learning_tuple = [esm, onehot_q]
         push!(learning_tuples, learning_tuple)
@@ -306,7 +306,7 @@ function q_learn_round(no_of_rounds = 20, no_of_episodes = 30, max_rounds_cutoff
     #     @load "qlearn_chain.bson" chain
     #     q_state = Q_learning_state(chain)
     # end
-    
+
     for round in 1:no_of_rounds
         println("Learning round ", round)
         q_choice = new_q_choice(q_state)
@@ -316,12 +316,12 @@ function q_learn_round(no_of_rounds = 20, no_of_episodes = 30, max_rounds_cutoff
 
         # Plot the distribution of lengths of games (won/draw ratio would also be of interest over time)
         plot_game_length_histogram(episodes)
-        
+
         q_learn!(q_state, episodes)
 
 #        @save "qlearn_chain.bson" q_state.chain
     end
-    
+
     return q_state
 end
 
@@ -342,7 +342,7 @@ clone_q_state(qs) = Q_learning_state(deepcopy(qs.chain), Dict{Array{Bool,1},Floa
 function clone_q_player(name, qp)
     qs = clone_q_state(qp.state)
     strategy = new_q_choice(qs)
-    return Player(name, strategy, qs)    
+    return Player(name, strategy, qs)
 end
 
 function q_learn_tournament_result!(learning_player, tournament_result)
@@ -366,18 +366,18 @@ function tournament_learning(
     cloning_trigger = 0.55,
     max_rounds_in_tournament_games=200,
     tournament_length = 10)
-    
+
     random_player   = Player("random player 1", random_choice, nothing)
-    
+
     initial_q_player  = new_q_player("Initial q player")
-    
+
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
     (p1, p2) = (random_player, initial_q_player)
     clone_generation = 1
-    for tournament in 1:no_of_tournaments
+    for tournament_round in 1:no_of_tournaments
 
-        println("Playing a tournament")        
+        println("Playing a tournament roun $tournament_round ")
         tournament_result     = play_tournament(
             p1,
             p2,
@@ -385,7 +385,7 @@ function tournament_learning(
             tournament_length)
 
         println("Tournament result = $tournament_result")
-        
+
         p2_advantage = p2_win_ratio(tournament_result)
         println("p2_advantage = $p2_advantage")
 
@@ -411,4 +411,3 @@ end
 ## TODO:   Write a q-learning implementation that is learning by playing tournaments do the A/B swap
 ##         trick, and clonw when the B player, that is currently learning, is winning 55% of the tournament
 ##         games.
-
