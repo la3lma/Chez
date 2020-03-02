@@ -300,6 +300,7 @@ new_q_state(chain  =  Chain(
 # using BSON: @save
 # using BSON: @load
 
+# Deprecated!
 function q_learn_round(no_of_rounds = 20, no_of_episodes = 30, max_rounds_cutoff = 200, q_state  = new_q_state(), do_save = false, do_restore = false)
 
     # if do_restore
@@ -351,6 +352,57 @@ function q_learn_tournament_result!(learning_player, tournament_result)
 end
 
 
+using Pkg
+Pkg.add("DataFrames")
+using DataFrames
+
+
+function new_learning_log()
+    return DataFrame(round = Int[],
+                     p1name = String[],
+                     p2name = String[],
+                     p1wins = Int[],
+                     p2wins = Int[],
+                     draws = Int[],
+                     p2advantage = Float64[],
+                     cloning_triggered = Bool[],
+                     clone_generation = Int[])
+end
+
+
+
+function log_learning_round!(
+    log::DataFrame,
+    round::Int,
+    noOfGames::Int,
+    p1_name::String,
+    p2_name::String,
+    p1_wins::Int,
+    p2_wins::Int,
+    draws::Int,
+    p2_advantage::Float64,
+    cloning_triggered::Bool,
+    clone_generation::Int)
+
+    tuple = (round,
+             noOfGames,
+             p1_name,
+             p2_name,
+             p1_wins,
+             p2_wins,
+             draws,
+             p2_advantage,
+             cloning_triggered,
+             clone_generation))
+    push!(log, tuple)
+
+    println("round $round p2_advantage = $p2_advantage")
+    if (cloning_triggered)
+        println("   p2( $p2_name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1_name, static)")
+    end
+end
+
+
 ##
 ##  Tournament learning.  Starting with one random player and
 ##  one learning player.  Until the required number of tournaments has
@@ -365,7 +417,9 @@ function tournament_learning(
     no_of_tournaments=4,
     cloning_trigger = 0.55,
     max_rounds_in_tournament_games=200,
-    tournament_length = 10)
+    tournament_length = 8)
+
+    log = new_learning_log()
 
     random_player   = Player("random player 1", random_choice, nothing)
 
@@ -377,7 +431,7 @@ function tournament_learning(
     clone_generation = 1
     for tournament_round in 1:no_of_tournaments
 
-        println("Playing a tournament roun $tournament_round ")
+        println("Playing tournament round $tournament_round ")
         tournament_result     = play_tournament(
             p1,
             p2,
@@ -387,27 +441,40 @@ function tournament_learning(
         println("Tournament result = $tournament_result")
 
         p2_advantage = p2_win_ratio(tournament_result)
-        println("p2_advantage = $p2_advantage")
+        p1name = p1.id
+        p2name = p2.id
+        cloning_triggered =  (p2_advantage >= cloning_trigger)
 
-        if (p2_advantage >= cloning_trigger)
-            p1name = p1.id
-            p2name = p2.id
-            println("p2 ($p2name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1name, static)")
-            p1 = clone_q_player("Clone gen $clone_generation q-player", p2)
-           clone_generation += 1
+
+        # XXX This is the result that should be logged into the dataframe, and
+        ##    should be displayed, graphs should be made from, etc.
+        log_learning_round!(
+            log,
+            tournament_round,
+            p1.id,
+            p2.id,
+            tournament_result.p1wins,
+            tournament_result.p2wins,
+            tournament_result.draws,
+            p2_advantage,
+            cloning_triggered,
+            clone_generation)
+
+        if cloning_triggered
+            clone_generation += 1
+            clone = clone_q_player("Clone gen $clone_generation q-player", p2)
+            (p1, p2) = (p2, clone)
         else
             q_learn_tournament_result!(p2, tournament_result)
         end
     end
-    return p2
+    return (log, p2)
 end
 
-@test tournament_learning() != nothing
+# @test tournament_learning() != nothing
+
+(log, winning_player) = tournament_learning()
 
 
 # Smoketest that will discover many weird errors.
 #@test q_learn_round() != nothing
-
-## TODO:   Write a q-learning implementation that is learning by playing tournaments do the A/B swap
-##         trick, and clonw when the B player, that is currently learning, is winning 55% of the tournament
-##         games.
