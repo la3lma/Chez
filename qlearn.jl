@@ -347,14 +347,19 @@ function clone_q_player(name, qp)
 end
 
 function q_learn_tournament_result!(learning_player, tournament_result)
-    println("Typeof games = ",  typeof(tournament_result.games))
     q_learn!(learning_player.state,  tournament_result.games)
 end
 
 
+
 using Pkg
 Pkg.add("DataFrames")
+
+using Pkg
+Pkg.add("CSV")
+
 using DataFrames
+using CSV
 
 
 function new_learning_log()
@@ -370,11 +375,12 @@ function new_learning_log()
 end
 
 
+## (::DataFrame, ::Int64, ::String, ::String, ::Int64, ::Int64, ::Int64, ::Float64, ::Bool, ::Int64)
 
 function log_learning_round!(
     log::DataFrame,
-    round::Int,
-    noOfGames::Int,
+    round::Int64,
+#    noOfGames::Int,
     p1_name::String,
     p2_name::String,
     p1_wins::Int,
@@ -385,7 +391,7 @@ function log_learning_round!(
     clone_generation::Int)
 
     tuple = (round,
-             noOfGames,
+ #            noOfGames,
              p1_name,
              p2_name,
              p1_wins,
@@ -393,13 +399,16 @@ function log_learning_round!(
              draws,
              p2_advantage,
              cloning_triggered,
-             clone_generation))
+             clone_generation)
     push!(log, tuple)
 
-    println("round $round p2_advantage = $p2_advantage")
+    println(stdout, "round $round p2_advantage = $p2_advantage")
     if (cloning_triggered)
-        println("   p2( $p2_name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1_name, static)")
+        println(stdout, "   p2( $p2_name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1_name, static)")
     end
+
+    ## Just trying out the csv thingy. This is not the final interface.
+    CSV.write("learning_round_log.csv", log)
 end
 
 
@@ -414,10 +423,10 @@ end
 ##  be an equally good, or almost as good player as itself is.
 ##
 function tournament_learning(
-    no_of_tournaments=4,
+    no_of_tournaments=100,
     cloning_trigger = 0.55,
     max_rounds_in_tournament_games=200,
-    tournament_length = 8)
+    tournament_length = 12)
 
     log = new_learning_log()
 
@@ -444,7 +453,6 @@ function tournament_learning(
         p1name = p1.id
         p2name = p2.id
         cloning_triggered =  (p2_advantage >= cloning_trigger)
-
 
         # XXX This is the result that should be logged into the dataframe, and
         ##    should be displayed, graphs should be made from, etc.
@@ -473,8 +481,14 @@ end
 
 # @test tournament_learning() != nothing
 
-(log, winning_player) = tournament_learning()
+(log, winning_player) = tournament_learning(
+    100,
+    0.55,
+    200,
+    100)
+
 
 
 # Smoketest that will discover many weird errors.
 #@test q_learn_round() != nothing
+
