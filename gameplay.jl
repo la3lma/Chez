@@ -28,7 +28,6 @@ struct Draw   <: GameOutcome end
 show_string(w::Win)  =  @sprintf("Win by %s", w.winner)
 show_string(w::Draw) =  "Draw"
 
-
 show(io::IO, w::GameOutcome) = show(io, show_string(w))
 
 
@@ -109,8 +108,60 @@ play_random_game(rounds=50) = play_game(random_choice, rounds)
 ###  Tournament play (for pitting two competitors against each other)
 ###
 
+struct Game_Result
+    p1::Player
+    p2::Player
+    outcome::GameOutcome
+    move_history
+    board_history
+end
 
-function play_tournament(player1::Player, player2::Player, max_rounds=200, tournament_length = 10, io::IO = devnull)
+
+
+##
+## Evaluating tournament results
+##
+
+struct Tournament_Result
+    games
+    p1
+    p2
+    p1wins
+    p2wins
+    draws
+end
+
+player_is_winner(w::Win,  p::Player)  = (p == w.player)
+player_is_winner(w::Draw, p::Player)  = false
+
+is_draw(w::Win) = false
+is_draw(w::Draw) = true
+        
+        
+did_player_win(game::Game_Result, player::Player)  =   player_is_winner(game.outcome, player)
+
+count_wins_for_player(games_in_tournament, player::Player) = 
+    sum([did_player_win(game, player) for game in games_in_tournament])    
+
+
+count_draws(games_in_tournament) =
+    sum([is_draw(game_result.outcome) for game_result  in games_in_tournament])
+
+
+p2_win_ratio(t::Tournament_Result) =
+    t.p1wins / (t.p1wins + t.p2wins + t.draws)
+
+         
+##
+## Plying tournaments
+##
+
+function play_tournament(
+    player1::Player,
+    player2::Player,
+    max_rounds=200,
+    tournament_length = 10,
+    io::IO = devnull)::Tournament_Result
 
     color = white
     game_is_won = false
@@ -149,19 +200,26 @@ function play_tournament(player1::Player, player2::Player, max_rounds=200, tourn
             color = other_color(color)
             (active_player, inactive_player) = (inactive_player, active_player)
         end
-        return (p1, p2, outcome, move_history, board_history)
+        return Game_Result(p1, p2, outcome, move_history, board_history)
     end
 
     # In the tournament, the players play every other game as white.
-    result = []
+    games = []
     for game in  1:tournament_length
         if (iseven(game))
-            push!(result, play_game(player1, player2))
+            push!(games, play_game(player1, player2))
         else
-            push!(result, play_game(player2, player1))
+            push!(games, play_game(player2, player1))
         end
     end
-    return result
+
+
+    ## Inefficient way of calculating these things.
+    p1wins = count_wins_for_player(games, player1)
+    p2wins = count_wins_for_player(games, player2)
+    draws  = count_draws(games)
+        
+    return Tournament_Result(games, player1, player2, p1wins, p2wins, draws)
 end
 
 
@@ -170,5 +228,8 @@ random_player_2 = Player("random player 2", random_choice, nothing)
 
 println("Playing tournament")
 @test play_tournament(random_player_1, random_player_2) != nothing
+@test p2_win_ratio(play_tournament(random_player_1, random_player_2)) >= 0
 
 println("Tournament played")
+
+
