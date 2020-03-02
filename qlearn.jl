@@ -374,7 +374,7 @@ function tournament_learning(
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
     (p1, p2) = (random_player, initial_q_player)
-    generation = 2
+    clone_generation = 1
     for tournament in 1:no_of_tournaments
 
         println("Playing a tournament")        
@@ -383,17 +383,18 @@ function tournament_learning(
             p2,
             max_rounds_in_tournament_games,
             tournament_length)
+
+        println("Tournament result = $tournament_result")
         
         p2_advantage = p2_win_ratio(tournament_result)
         println("p2_advantage = $p2_advantage")
 
         if (p2_advantage >= cloning_trigger)
-    
             p1name = p1.id
             p2name = p2.id
             println("p2 ($p2name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1name, static)")
-            p1 = clone_q_player("Clone $generation q-player", p2)
-            generation += 1
+            p1 = clone_q_player("Clone gen $clone_generation q-player", p2)
+           clone_generation += 1
         else
             q_learn_tournament_result!(p2, tournament_result)
         end

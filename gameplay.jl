@@ -134,24 +134,35 @@ end
 player_is_winner(w::Win,  p::Player)  = (p == w.player)
 player_is_winner(w::Draw, p::Player)  = false
 
-is_draw(w::Win) = false
+is_draw(w::Win)  = false
 is_draw(w::Draw) = true
         
         
 did_player_win(game::Game_Result, player::Player)  =   player_is_winner(game.outcome, player)
 
-count_wins_for_player(games_in_tournament, player::Player) = 
-    sum([did_player_win(game, player) for game in games_in_tournament])    
+count_wins_for_player(games, player::Player) = 
+    sum([did_player_win(game, player) for game in games])    
 
-
-count_draws(games_in_tournament) =
-    sum([is_draw(game_result.outcome) for game_result  in games_in_tournament])
+count_draws(games) =
+    sum([is_draw(game_result.outcome) for game_result  in games])
 
 
 p2_win_ratio(t::Tournament_Result) =
-    t.p1wins / (t.p1wins + t.p2wins + t.draws)
+    t.p2wins / (t.p1wins + t.p2wins + t.draws)
 
-         
+
+function show(io::IO, r::Tournament_Result)
+    no_of_games = length(r.games)
+    p1 = r.p1.id
+    p2 = r.p2.id
+    p1wins = r.p1wins
+    p2wins = r.p2wins
+    draws =  r.draws
+    result = "Tournament_Result{games= {$no_of_games}, p1='$p1', p2='$p2',  p1wins = $p1wins, p2wins = $p2wins, draws = $draws}"
+    show(io, result)
+end
+
+
 ##
 ## Plying tournaments
 ##
@@ -163,16 +174,17 @@ function play_tournament(
     tournament_length = 10,
     io::IO = devnull)::Tournament_Result
 
-    color = white
-    game_is_won = false
-    round = 0
-    board = startingBoard
-    move_history = []
-    board_history = []
-    outcome = Draw()
 
     function play_game(p1, p2)
         (active_player, inactive_player) = (p1, p2)
+
+        color = white
+        game_is_won = false
+        round = 0
+        board = startingBoard
+        move_history = []
+        board_history = []
+        outcome = Draw()
         
         while (!game_is_won && round < max_rounds + 1)
             active_strategy = active_player.strategy
@@ -186,7 +198,7 @@ function play_tournament(
                 println(io, "Applying next_move ",  next_move)
                 board = apply_move!(next_move, board)
 
-                push!(move_history, next_move)
+                push!(move_history,  next_move)
                 push!(board_history, board)
 
                 println(io, board)
@@ -204,15 +216,8 @@ function play_tournament(
     end
 
     # In the tournament, the players play every other game as white.
-    games = []
-    for game in  1:tournament_length
-        if (iseven(game))
-            push!(games, play_game(player1, player2))
-        else
-            push!(games, play_game(player2, player1))
-        end
-    end
-
+    games = [ iseven(i) ?  play_game(player1, player2) : play_game(player2, player1)
+              for i in 1:tournament_length ]
 
     ## Inefficient way of calculating these things.
     p1wins = count_wins_for_player(games, player1)
@@ -222,14 +227,15 @@ function play_tournament(
     return Tournament_Result(games, player1, player2, p1wins, p2wins, draws)
 end
 
-
 random_player_1 = Player("random player 1", random_choice, nothing)
 random_player_2 = Player("random player 2", random_choice, nothing)
 
 println("Playing tournament")
-@test play_tournament(random_player_1, random_player_2) != nothing
+@test play_tournament(random_player_1, random_player_2) != Nothing
 @test p2_win_ratio(play_tournament(random_player_1, random_player_2)) >= 0
 
 println("Tournament played")
+
+
 
 
