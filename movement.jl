@@ -55,23 +55,24 @@ end
 # The two implementations below are not really conformant
 
 # Standard Algebraic Notation (SAN)
-function move_as_san(m::Move)
+function move_as_san(m::Move)::String
     capture = m.capture ? "x" : ""
     return @sprintf("%s%s%s%s", m.startPiece.printrep, m.start, capture, m.destination)
 end
 
 # Figurine Algebraic Notation (FAN)
-function move_as_san(m::Move)
+function move_as_san(m::Move)::String
     capture = m.capture ? "x" : ""
     return @sprintf("%s%s%s%s", m.startPiece.unicode, m.start, capture, m.destination)
 end
 
 
-show(io::IO, m::Move) = show(io, move_as_san(m))
+Show(io::IO, m::Move) = show(io, move_as_san(m))
 
 
 ##
-## Checking if moves are identical
+## Checking if moves are identical.  May be of interest when looking for
+## draws due to multiple repetitions of moves.
 ##
 #
 # function ==(m1::Move, m2::Move)
@@ -206,19 +207,6 @@ moves_from_jumps(board::ChessBoard, start::Coord, jumps, requireCaptures::Bool) 
 
 
 @test [ Move(a2, a3, false, wp, bs)]   == moves_from_jumps(startingBoard, a2,[Coord(0,1)], false)
-
-# XXX Placeholder.  When we are able to generate all moves for all types, this
-#     "catch-all" movement generator should either be removed, or throw some kind of
-#     exception.
-# function get_moves_for_piece(piece::PieceType, color::Color,  board::ChessBoard, coord::Coord)
-#   []
-# end
-
-# # Same as above.  Remove when complete movement generation has been implemented.
-# function get_moves_for_piece(piece::Blank, board::ChessBoard, coord::Coord)
-#   []  # Arguably, this should throw an exception instead, or return nothing.
-# end
-
 
 
 

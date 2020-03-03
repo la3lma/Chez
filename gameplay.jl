@@ -12,8 +12,6 @@ struct Player
 end
 
 
-
-
 ##
 ##  Representing game outcomes
 ##
@@ -31,47 +29,49 @@ show_string(w::Draw) =  "Draw"
 show(io::IO, w::GameOutcome) = show(io, show_string(w))
 
 
-##
-##   The mechanics of playing a game using some
-##   strategy that will select the next move.
-##
+#XXX Obsolete code.  Remove once it's been proven to be not used anywhere important.
 
-function play_game(strategy, max_rounds, io::IO = stdout)
-    color = white
-    game_is_won = false
-    round = 0
-    board = startingBoard
-    move_history = []
-    board_history = []
-    outcome = Draw()
+# ##
+# ##   The mechanics of playing a game using some
+# ##   strategy that will select the next move.
+# ##
 
-    while (!game_is_won && round < max_rounds + 1)
-        println(io, "Round " , round, " color ", color)
-        available_moves = get_moves(color, board)
-        if (!isempty(available_moves))
-            println(io, "Number of moves available = ", length(available_moves))
+# function play_game(strategy, max_rounds, io::IO = stdout)
+#     color = white
+#     game_is_won = false
+#     round = 0
+#     board = startingBoard
+#     move_history = []
+#     board_history = []
+#     outcome = Draw()
 
-            println(io, "Moves available = ", available_moves)
-            next_move = strategy(board, available_moves, move_history, board_history)
-            println(io, "Applying next_move ",  next_move)
-            board = apply_move!(next_move, board)
+#     while (!game_is_won && round < max_rounds + 1)
+#         println(io, "Round " , round, " color ", color)
+#         available_moves = get_moves(color, board)
+#         if (!isempty(available_moves))
+#             println(io, "Number of moves available = ", length(available_moves))
 
-            push!(move_history, next_move)
-            push!(board_history, board)
+#             println(io, "Moves available = ", available_moves)
+#             next_move = strategy(board, available_moves, move_history, board_history)
+#             println(io, "Applying next_move ",  next_move)
+#             board = apply_move!(next_move, board)
 
-            println(io, board)
-            game_is_won = captures_king(next_move)
-            if game_is_won
-                println(io, "Game is won by ",  color)
-                outcome = Win(color, Player("Not a real player", nothing, nothing))
-            end
-        end
-        round += 1
-        color = other_color(color)
-    end
+#             push!(move_history, next_move)
+#             push!(board_history, board)
 
-    return (outcome, move_history, board_history)
-end
+#             println(io, board)
+#             game_is_won = captures_king(next_move)
+#             if game_is_won
+#                 println(io, "Game is won by ",  color)
+#                 outcome = Win(color, Player("Not a real player", nothing, nothing))
+#             end
+#         end
+#         round += 1
+#         color = other_color(color)
+#     end
+
+#     return (outcome, move_history, board_history)
+# end
 
 ##
 ##   A very simple gameplay strategy: Select a move at
@@ -96,12 +96,6 @@ random_choice(state, available_moves, action_history, state_history) =
 
 play_random_game(rounds=50) = play_game(random_choice, rounds)
 
-# XXX This fails, for some reason
-# using Plots
-#
-#function plot_game_length_histogram()
-#    histogram([length((play_game(random_choice, 5000, devnull))[2]) for x in 1:300], bins=:scott)
-#end
 
 
 ###
@@ -115,7 +109,6 @@ struct Game_Result
     move_history
     board_history
 end
-
 
 
 ##
@@ -231,7 +224,7 @@ random_player_1 = Player("random player 1", random_choice, nothing)
 random_player_2 = Player("random player 2", random_choice, nothing)
 
 println("Playing tournament")
-@test play_tournament(random_player_1, random_player_2) != Nothing
+@test play_tournament(random_player_1, Random_player_2) != Nothing
 @test p2_win_ratio(play_tournament(random_player_1, random_player_2)) >= 0
 
 println("Tournament played")

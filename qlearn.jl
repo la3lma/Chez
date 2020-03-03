@@ -115,8 +115,8 @@ function new_q_choice(qs::Q_learning_state)
     # qs learning state.
     function get_q_choice(state,  available_moves, action_history, state_history)
         get_q = move -> get_q_value(qs, state, move, action_history, state_history)
-        if q.randomness > rand()
-            return random_choice(available_moves)
+        if qs.randomness > rand()
+            return get_random_element(available_moves)
         else            
             best_move_index = randomized_argmax(map(get_q, available_moves))
             return available_moves[best_move_index]
@@ -263,8 +263,8 @@ new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =
 ###  (when this works, refactor much of the code above into oblivion)
 ###
 
-function new_q_player(name)
-    qs = new_q_state()
+function new_q_player(name, randomness)
+    qs = new_q_state(new_q_chain(), randomness)
     strategy = new_q_choice(qs)
     return Player(name, strategy, qs)
 end
@@ -312,7 +312,7 @@ function tournament_learning(
     # many things that should b e part of this experimental program in the end:
     # how to test settings of various hyperparameters and how they
     # influence system performance.
-    initial_q_player  = new_q_player("Initial q player", randomness = 0.05)
+    initial_q_player  = new_q_player("Initial q player",  0.05)
 
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.

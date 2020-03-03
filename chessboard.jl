@@ -68,8 +68,8 @@ function intToChessLetter(i::Integer)
     end
 end
 
-@test isequal(intToChessLetter(1), "a")
-@test isequal(intToChessLetter(8), "h")
+@test isequal(intToChessLetter(1),  "a")
+@test isequal(intToChessLetter(8),  "h")
 @test isequal(intToChessLetter(81), "X")
 
 # For the chessboard only ordinates in the range [1..8] are
@@ -103,7 +103,6 @@ end
 
 
 show(io::IO, m::Coord) =  print(io, coord_to_string(m))
-
 
 
 ## All coordinates, expanded for convenience
@@ -195,7 +194,6 @@ all_chessboard_locations = [a1, a2, a3, a4, a5, a6, a7, a8, b1, b2, b3, b4, b5, 
 # Define coordinate equality
 #
 ==(c1::Coord, c2::Coord) = (c1.x == c2.x && c1.y == c2.y)
-
 
 
 
