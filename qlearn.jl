@@ -297,35 +297,6 @@ new_q_state(chain  =  Chain(
     )
 
 
-# using BSON: @save
-# using BSON: @load
-
-# Deprecated!
-function q_learn_round(no_of_rounds = 20, no_of_episodes = 30, max_rounds_cutoff = 200, q_state  = new_q_state(), do_save = false, do_restore = false)
-
-    # if do_restore
-    #     @load "qlearn_chain.bson" chain
-    #     q_state = Q_learning_state(chain)
-    # end
-
-    for round in 1:no_of_rounds
-        println("Learning round ", round)
-        q_choice = new_q_choice(q_state)
-
-        # Play some games so we get something to learn from
-        episodes = [play_game(q_choice, max_rounds_cutoff, devnull) for x in 1:no_of_episodes]
-
-        # Plot the distribution of lengths of games (won/draw ratio would also be of interest over time)
-        plot_game_length_histogram(episodes)
-
-        q_learn!(q_state, episodes)
-
-#        @save "qlearn_chain.bson" q_state.chain
-    end
-
-    return q_state
-end
-
 
 ###
 ###  Next generation tournament-based players
@@ -486,9 +457,4 @@ end
     0.55,
     200,
     100)
-
-
-
-# Smoketest that will discover many weird errors.
-#@test q_learn_round() != nothing
 
