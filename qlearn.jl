@@ -3,13 +3,6 @@
 ###
 
 
-## XXX Helper
-function printdim(label, x)
-    println("=> ", label, " type = ", typeof(x))
-    a,b = size(x)
-    println("=> ", label, " size = (", a,  ",", b, ")")
-end
-
 
 ##
 ##  One-hot coding of game state and moves.
@@ -52,6 +45,7 @@ one_hot_encode_chess_state(state, move_being_queried, action_history = nothing ,
 struct Q_learning_state
     chain
     cache::Dict
+    randomness::Float64
 end
 
 function wipe_cache!(qs::Q_learning_state)
@@ -121,44 +115,26 @@ function new_q_choice(qs::Q_learning_state)
     # qs learning state.
     function get_q_choice(state,  available_moves, action_history, state_history)
         get_q = move -> get_q_value(qs, state, move, action_history, state_history)
-
-        # XXX For now this is randomized with respect  to maximal moves,
-        #     but to explore it will be necessary to also explore some
-        #     non-optimal moves.
-        best_move_index = randomized_argmax(map(get_q, available_moves))
-        return available_moves[best_move_index]
+        if q.randomness > rand()
+            return random_choice(available_moves)
+        else            
+            best_move_index = randomized_argmax(map(get_q, available_moves))
+            return available_moves[best_move_index]
+        end
     end
 
     return get_q_choice
 end
 
 
-
-# The state here must be:
-#   * The game board
-#   * The player that will make the next move
-#   * previous 2 moves (to be able to detect draw by repetition)
-# The Q value we are estimating to be a number between 1 and 100 (or so)
-#   * We will have to represent it using one-hot coding, so it won't be awfully
-#     accurate but I think we can live with that.
-
-
-# https://en.wikipedia.org/wiki/Q-learning
-# (seems like the maxq -Q value is missing a layer of parens.
-#  https://en.wikipedia.org/wiki/Q-learning
-# q_new(state_t, action_t) = q_old(state_t, action_t) + 𝛼 *  (reward + 𝛾 * (argmax_actions(a-> q_old(state_t+1, a)) - q_old(state_t, action_t)))
-
-#
-#  Also think about https://en.wikipedia.org/wiki/State%E2%80%93action%E2%80%93reward%E2%80%93state%E2%80%93action
-#
+##
+## Calculate the rewards from winnings and draws
+##
 
 reward(x::Draw, color::Color) = 0
 reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
 
 
-## XXX Once this works, remove the first
-##     definition and only use the last one.
-deconstruct_episode(episode::Any) = episode
 deconstruct_episode(r::Game_Result) = (r.outcome, r.move_history, r.board_history)
 
 
@@ -256,46 +232,29 @@ end
 ##
 
 
-using Plots
-using DataStructures
 
-function plot_game_length_histogram(episodes)
-    # each episode has structure (outcome, move_history, board_history)
-    lengths = [length(e[2]) for e in episodes]
-    winners = [e[1] for e in episodes]
-    println("histogram's lenghts = ", lengths)
-    winner_strings = map(x -> show_string(x), winners)
-    counts = counter(winner_strings)
-    println("winner strings = ", counts)
-    # black_wins = counts("Win by Color(\"Black\", \"b\")")
-    # white_wins = counts("Win by Color(\"White\", \"w\")")
-    # draws = counts("Draw")
-    # white_fraction = white_wins / (black_wins + white_wins + draws )
-    # println("White fraction = ", white_fraction)
-    histogram(lengths)
-    # histogram(lengths, bins=:scott)
-end
+## XXX The chain being  used here is just made  up at the spur of the moment.
+##     it needs to be properly engineered and tuned. Right now it's just
+##     a placeholder to get the rest of the machinery in place.
 
+new_q_chain() =
+    Chain(
+        Dense(960, 960, σ),
+        Dense(960, 400, σ),
+        Dense(400, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, no_of_output_nodes_to_encode_q),
+        softmax)
 
-
-new_q_state(chain  =  Chain(
-    Dense(960, 960, σ),
-    Dense(960, 400, σ),
-    Dense(400, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, 200, σ),
-    Dense(200, no_of_output_nodes_to_encode_q),
-    softmax)) = Q_learning_state(
-        # This chain is simply  a placeholder for a more realistic network
-        # to be evolved in the future.
-        chain,
-        Dict{Array{Bool,1},Float32}()
-    )
-
+new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) = Q_learning_state(
+    chain,
+    Dict{Array{Bool,1},Float32}()
+    randomness)
 
 
 ###
@@ -309,7 +268,8 @@ function new_q_player(name)
     return Player(name, strategy, qs)
 end
 
-clone_q_state(qs) = Q_learning_state(deepcopy(qs.chain), Dict{Array{Bool,1},Float32}())
+clone_q_state(qs, clone_randomness::Bool = false) =
+    Q_learning_state(deepcopy(qs.chain), Dict{Array{Bool,1},Float32}(), clone_randomness ? qs.randomness : 0.0)
 
 function clone_q_player(name, qp)
     qs = clone_q_state(qp.state)
@@ -346,12 +306,9 @@ function new_learning_log()
 end
 
 
-## (::DataFrame, ::Int64, ::String, ::String, ::Int64, ::Int64, ::Int64, ::Float64, ::Bool, ::Int64)
-
 function log_learning_round!(
     log::DataFrame,
     round::Int64,
-#    noOfGames::Int,
     p1_name::String,
     p2_name::String,
     p1_wins::Int,
@@ -362,7 +319,6 @@ function log_learning_round!(
     clone_generation::Int)
 
     tuple = (round,
- #            noOfGames,
              p1_name,
              p2_name,
              p1_wins,
@@ -403,7 +359,15 @@ function tournament_learning(
 
     random_player   = Player("random player 1", random_choice, nothing)
 
-    initial_q_player  = new_q_player("Initial q player")
+    # When playing as a learning player, the q_player will
+    # select 5% of its moves randomly among the currently available
+    # moves.  This will put it at a disadvantage from a gameplay point of
+    # view, but it will also explore more of the game space.  It's an
+    # idea.  Don't know how to test it properly yet, but that is one of the
+    # many things that should b e part of this experimental program in the end:
+    # how to test settings of various hyperparameters and how they
+    # influence system performance.
+    initial_q_player  = new_q_player("Initial q player", randomness = 0.05)
 
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
@@ -411,6 +375,7 @@ function tournament_learning(
     clone_generation = 1
     for tournament_round in 1:no_of_tournaments
 
+        # Play the tournament
         println("Playing tournament round $tournament_round ")
         tournament_result     = play_tournament(
             p1,
@@ -418,15 +383,14 @@ function tournament_learning(
             max_rounds_in_tournament_games,
             tournament_length)
 
-        println("Tournament result = $tournament_result")
-
+        # Extract the values we need to log and progress
         p2_advantage = p2_win_ratio(tournament_result)
         p1name = p1.id
         p2name = p2.id
         cloning_triggered =  (p2_advantage >= cloning_trigger)
 
-        # XXX This is the result that should be logged into the dataframe, and
-        ##    should be displayed, graphs should be made from, etc.
+        # Log  the current learning round into a dataframe ("log")
+        # so that we can keep track of progress.
         log_learning_round!(
             log,
             tournament_round,
@@ -439,14 +403,19 @@ function tournament_learning(
             cloning_triggered,
             clone_generation)
 
+        # If cloning was triggered, then do  that
         if cloning_triggered
             clone_generation += 1
             clone = clone_q_player("Clone gen $clone_generation q-player", p2)
-            (p1, p2) = (p2, clone)
-        else
-            q_learn_tournament_result!(p2, tournament_result)
+            (p1, p2) = (clone, p2)
         end
+
+        # Then  learn from this round
+        q_learn_tournament_result!(p2, tournament_result)
     end
+
+    # Finally return the dataframe with the log, and the
+    # final evolved player
     return (log, p2)
 end
 
