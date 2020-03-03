@@ -251,10 +251,11 @@ new_q_chain() =
         Dense(200, no_of_output_nodes_to_encode_q),
         softmax)
 
-new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) = Q_learning_state(
-    chain,
-    Dict{Array{Bool,1},Float32}()
-    randomness)
+new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =
+    Q_learning_state(
+        chain,
+        Dict{Array{Bool,1},Float32}(),
+        randomness)
 
 
 ###
@@ -281,62 +282,6 @@ function q_learn_tournament_result!(learning_player, tournament_result)
     q_learn!(learning_player.state,  tournament_result.games)
 end
 
-
-
-using Pkg
-Pkg.add("DataFrames")
-
-using Pkg
-Pkg.add("CSV")
-
-using DataFrames
-using CSV
-
-
-function new_learning_log()
-    return DataFrame(round = Int[],
-                     p1name = String[],
-                     p2name = String[],
-                     p1wins = Int[],
-                     p2wins = Int[],
-                     draws = Int[],
-                     p2advantage = Float64[],
-                     cloning_triggered = Bool[],
-                     clone_generation = Int[])
-end
-
-
-function log_learning_round!(
-    log::DataFrame,
-    round::Int64,
-    p1_name::String,
-    p2_name::String,
-    p1_wins::Int,
-    p2_wins::Int,
-    draws::Int,
-    p2_advantage::Float64,
-    cloning_triggered::Bool,
-    clone_generation::Int)
-
-    tuple = (round,
-             p1_name,
-             p2_name,
-             p1_wins,
-             p2_wins,
-             draws,
-             p2_advantage,
-             cloning_triggered,
-             clone_generation)
-    push!(log, tuple)
-
-    println(stdout, "round $round p2_advantage = $p2_advantage")
-    if (cloning_triggered)
-        println(stdout, "   p2( $p2_name, learning) has a $p2_advantage advantage, so cloning it into p1, replacing ($p1_name, static)")
-    end
-
-    ## Just trying out the csv thingy. This is not the final interface.
-    CSV.write("learning_round_log.csv", log)
-end
 
 
 ##
@@ -421,9 +366,11 @@ end
 
 # @test tournament_learning() != nothing
 
-(log, winning_player) = tournament_learning(
-    400,
-    0.55,
-    200,
-    100)
+function run_big_tournament()
+    (log, winning_player) = tournament_learning(
+        400,
+        0.55,
+        200,
+        100)
+end
 

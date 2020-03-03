@@ -6,7 +6,7 @@
 using Printf
 
 struct ChessBoard
-    board::Array{ChessPiece}
+    Board::Array{ChessPiece}
 end
 
 clone_board(b::ChessBoard) = ChessBoard(deepcopy(b.board))
