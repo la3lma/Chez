@@ -482,7 +482,7 @@ end
 # @test tournament_learning() != nothing
 
 (log, winning_player) = tournament_learning(
-    100,
+    400,
     0.55,
     200,
     100)
