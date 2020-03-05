@@ -6,7 +6,7 @@
 using Printf
 
 struct ChessBoard
-    Board::Array{ChessPiece}
+    board::Array{ChessPiece}
 end
 
 clone_board(b::ChessBoard) = ChessBoard(deepcopy(b.board))
@@ -14,14 +14,16 @@ clone_board(b::ChessBoard) = ChessBoard(deepcopy(b.board))
 
 ## Printing chessboards
 function show(io::IO, cb::ChessBoard)
- for y1  in  1:8
-  y = 9 - y1
-  print(io, y)
-  for x in  1:8
-     @printf(io, "%s",  cb.board[y, x].unicode)
-  end
-  println(io, y)
- end
+    println(io, " abcdefgh")
+    for y1  in  1:8
+        y = 9 - y1
+        print(io, y)
+        for x in  1:8
+            @printf(io, "%s",  cb.board[y, x].unicode)
+        end
+        println(io, y)
+    end
+    println(io, " abcdefgh")    
 end
 
 # Constructing an initial chessboard

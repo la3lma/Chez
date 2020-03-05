@@ -199,8 +199,8 @@ end
 
 
 function one_hot_coded_q_values_difference(q1,q2)
-    v1 = one_hot_encode_q(q1)
-    v2 = one_hot_encode_q(q2)
+    v1 = one_cold_decode_q(q1)
+    v2 = one_cold_decode_q(q2)
     return v1 - v2
 end
 
@@ -211,9 +211,16 @@ function q_learn!(qs, episodes)
 
     learning_episodes = map(episode -> learn_from_episode(qs, episode), episodes)
 
+
+
     chain = qs.chain
-    loss(x, y) = Flux.mse(chain(x), y)
+
+    ## Don't really knwo how to set up the loss function
+    # loss(x, y) = Flux.mse(chain(x), y)
+    #  ... the value below is failing!
     # loss(x, y) = one_hot_coded_q_values_difference(chain(x), y)
+    loss(x,y) = Flux.crossentropy(chain(x),y)
+    
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
@@ -366,11 +373,10 @@ end
 
 # @test tournament_learning() != nothing
 
-function run_big_tournament()
-    (log, winning_player) = tournament_learning(
-        400,
-        0.55,
-        200,
-        100)
-end
+run_big_tournament() = tournament_learning(
+        20,     # no of tournaments
+        0.55,   # Trigger
+        200,    # Max rounds
+        20)     # Tournament length
+
 

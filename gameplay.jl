@@ -86,7 +86,7 @@ random_choice(state, available_moves, action_history, state_history) =
 
 # Play a hundred random games with no output, just to check that the
 # game mechanics isn't totally screwed up
-@test [play_game(random_choice, 5000, devnull) for x in 1:100] != nothing
+# @test [play_game(random_choice, 5000, devnull) for x in 1:100] != nothing
 
 
 ##
@@ -223,12 +223,59 @@ end
 random_player_1 = Player("random player 1", random_choice, nothing)
 random_player_2 = Player("random player 2", random_choice, nothing)
 
-println("Playing tournament")
-@test play_tournament(random_player_1, Random_player_2) != Nothing
+println("Testing: Playing tournament")
+@test play_tournament(random_player_1, random_player_2) != Nothing
 @test p2_win_ratio(play_tournament(random_player_1, random_player_2)) >= 0
-
-println("Tournament played")
-
+println("Testing: Tournament played")
 
 
+##
+##  Enabling play between humans and agents.
+##
+function read_legal_move_number(no_of_available_moves)
+    while true
+        # try 
+            j = parse(Int64, readline())
+            println("Just read $j")
+
+            if (j < 0 || no_of_available_moves  < j)
+                println("Illegal index $j")
+            else
+                return j
+            end
+       #  catch e
+            println("Not a number, $e")
+       #  end
+    end
+end
+
+function select_move_interactively(available_moves)
+    while true
+        println("Available moves are (0 to abort): ")
+
+        for i in 1:length(available_moves)
+            println("$i = ", available_moves[i])
+        end
+        
+        j = read_legal_move_number(length(available_moves))
+        if (j == 0)
+            #  This doesn't work. Don't know how to abort :-)
+            error("This game is being aborted")
+        end
+        return available_moves[j]
+    end
+end
+
+function select_move_interactively(state, available_moves, action_history, state_history)
+    println("[2JCurrent state = ")
+    println(state)
+    return select_move_interactively(available_moves)
+            
+end
+
+# Play a an interactive game against the computer oposition.")
+interactive_game(p::Player) =
+    play_tournament(p, Player("Interactive player", select_move_interactively, nothing))
+
+    
 

@@ -67,7 +67,7 @@ function move_as_san(m::Move)::String
 end
 
 
-Show(io::IO, m::Move) = show(io, move_as_san(m))
+show(io::IO, m::Move) = show(io, move_as_san(m))
 
 
 ##
