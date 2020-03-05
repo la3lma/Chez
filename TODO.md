@@ -93,6 +93,7 @@ References
 * https://arxiv.org/pdf/2001.09318.pdf
 * https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/
 * https://web.stanford.edu/~surag/posts/alphazero.html
+* https://theaisummer.com/Deep-Learning-Algorithms/
 
 
 Deep q learning
