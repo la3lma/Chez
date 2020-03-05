@@ -95,6 +95,11 @@ References
 * https://web.stanford.edu/~surag/posts/alphazero.html
 
 
+Deep q learning
+===
+* Dueling network architectures for reinforcement learing: https://arxiv.org/pdf/1511.06581.pdf
+* Dueling deep q networks: https://towardsdatascience.com/dueling-deep-q-networks-81ffab672751
+* Distributed deep q learning: https://stanford.edu/~rezab/classes/cme323/S15/projects/deep_Qlearning_report.pdf
 Four in a row
 ==
 
