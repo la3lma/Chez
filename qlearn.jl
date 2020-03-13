@@ -246,15 +246,15 @@ end
 
 new_q_chain() =
     Chain(
-        Dense(960, 960, σ),
-        Dense(960, 400, σ),
-        Dense(400, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 200, σ),
+        Dense(960, 960, relu),
+        Dense(960, 400, relu),
+        Dense(400, 200, relu),
+        Dense(200, 200, relu),
+        Dense(200, 200, relu),
+        Dense(200, 200, relu),
+        Dense(200, 200, relu),
+        Dense(200, 200, relu),
+        Dense(200, 200, relu),
         Dense(200, no_of_output_nodes_to_encode_q),
         softmax)
 
