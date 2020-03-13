@@ -17,7 +17,7 @@ This will load the code and run unit tests.
 
 
 ### Game mechanics
-===
+
 
 * Detect move repetition to signal draws.
 * Let the game board contain the state of the rookings, and movements of the king/rooks.
