@@ -42,7 +42,7 @@ one_hot_encode_chess_state(state, move_being_queried, action_history = nothing ,
 
 
 
-struct Q_learning_state
+mutable struct Q_learning_state
     chain
     cache::Dict
     randomness::Float64
@@ -211,9 +211,10 @@ function q_learn!(qs, episodes)
 
     learning_episodes = map(episode -> learn_from_episode(qs, episode), episodes)
 
+    learning_episodes = todevice(learning_episodes)
 
-
-    chain = qs.chain
+    chain = qs.chain |> gpu
+    learning_episodes = learning_episodes |> gpu
 
     ## Don't really knwo how to set up the loss function
     # loss(x, y) = Flux.mse(chain(x), y)
@@ -225,13 +226,17 @@ function q_learn!(qs, episodes)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
 
     print("   Training: ")
-    for data in learning_episodes
+    for episode in learning_episodes
         print(".")
-        Flux.train!(loss, ps, data, opt)
+        Flux.train!(loss, ps, episode, opt)
     end
+
+    qs.chain = chain |> cpu
     println()
 end
 
+use_gpu = true
+todevice(x) = use_gpu ? gpu(x) : x
 
 
 ##
@@ -378,5 +383,12 @@ run_big_tournament() = tournament_learning(
         0.55,   # Trigger
         200,    # Max rounds
         20)     # Tournament length
+
+
+run_micro_tournament() = tournament_learning(
+        5,     # no of tournaments
+        0.55,   # Trigger
+        200,    # Max rounds
+        10)     # Tournament length
 
 
