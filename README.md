@@ -14,7 +14,13 @@ This will load the code and run unit tests.
 
 ## TODO
 
+### Optimizations
 
+* Make the flux calculations run using a GPU
+* Make the scalar computations (chessplaying in particular) run in
+  paralell (one process per game). It's a rediculously parallell
+  task, and I want to speed it up by a factor of how many cores are
+  available.
 
 ### Game mechanics
 
