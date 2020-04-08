@@ -36,6 +36,7 @@ one_hot_encode_chess_state(state, move_being_queried, action_history = nothing ,
 @test length(one_hot_encode_chess_state(startingBoard, Move(Coord(1,1), Coord(2,2), false, bp, bp))) == 960
 
 
+
 ###
 ###  Q-learning mechanics
 ###
@@ -53,6 +54,34 @@ function wipe_cache!(qs::Q_learning_state)
         delete!(qs.cache, k)
     end
 end
+
+
+
+###
+### Storing and restoring q players' weights
+###
+using BSON: @save
+using BSON: @load
+
+function store_q_player(p, name)
+    @save "$name.bson" p
+end
+
+
+function restore_q_player(name)
+    filename = "$name.bson"
+    if isfile(filename)
+        @load filename p
+        strategy = new_q_choice(p.state)
+        p = Player(p.id, strategy, p.state)
+        return p
+    else
+        return Nothing
+    end
+end
+
+
+
 
 ##
 ##  One-hot coding of Q-values
@@ -379,7 +408,8 @@ function tournament_learning(
         # Then  learn from this round
         q_learn_tournament_result!(p2, tournament_result)
         if do_snapshots
-            println("Simulating snapshots")            
+            store_q_player(p1, "p1")
+            store_q_player(p2, "p2")
         end
     end
 
@@ -412,4 +442,22 @@ run_nano_tournament() = tournament_learning(
 
 
 @test run_nano_tournament != nothing
+
+
+function learning_increment()
+    p1 = restore_q_player("p1")
+    p2 = restore_q_player("p2")
+
+    # Appending to the history is not happening in a proper manner!
+
+    tournament_learning(
+        20,     # no of tournaments
+        0.55,   # Trigger
+        20,     # Max rounds
+        2,      # Tournament length
+        p1,     # First player
+        p2,     # Second player
+        true    # Do snapshots
+    )
+end
 
