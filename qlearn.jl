@@ -503,7 +503,7 @@ function learning_increment(prod=false)
         learning_round += 1
     end
 
-    println("cl = $clone_generation, lr=$learning_round")
+
     # Appending to the history is not happening in a proper manner!
 
     if prod
