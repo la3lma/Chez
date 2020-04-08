@@ -63,6 +63,8 @@ RUN julia --eval 'import Pkg; Pkg.resolve()'
 
 WORKDIR /chezjulia
 
+
+# TODO Loading chezjulia as a package would make the load-time lower, consider tht for the future.
 COPY chez.jl /chezjulia
 COPY gameplay.jl /chezjulia
 COPY movement.jl /chezjulia
@@ -75,13 +77,17 @@ COPY qlearn.jl /chezjulia
 
 RUN julia --eval 'include("chez.jl")'
 
+WORKDIR /data
+
+
 
 
 #  Run a learning task
-CMD julia --eval 'if !isfile("/data"); println("No data bailing out"); exit(); end; learning_increment()'
+CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/chezjulia");include("chez.jl"); cd("/data");  learning_increment(); end'
 
 
-# RUN echo 'alias jupy="jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root"' > /.bashrc
+
+# Run echo 'alias jupy="jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root"' > /.bashrc
 
 # To run a jupyter notebook, run this command in the shell
 # jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
