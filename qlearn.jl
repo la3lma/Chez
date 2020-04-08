@@ -493,7 +493,7 @@ run_nano_tournament() = tournament_learning(
 @test run_nano_tournament != nothing
 
 
-function learning_increment()
+function learning_increment(prod=false)
     p1 = restore_q_player("p1")
     p2 = restore_q_player("p2")
     clone_generation = restore_clone_generation()
@@ -506,16 +506,30 @@ function learning_increment()
     println("cl = $clone_generation, lr=$learning_round")
     # Appending to the history is not happening in a proper manner!
 
-    tournament_learning(
-        3,      # no of tournaments
-        0.55,   # Trigger
-        5,      # Max rounds
-        2,      # Tournament length
-        p1,     # First player
-        p2,     # Second player
-        true,    # Do snapshots
-        clone_generation, # tssia
-        learning_round
-    )
+    if prod
+        tournament_learning(
+            10,      # no of tournaments
+            0.55,    # Trigger
+            200,     # Max rounds
+            100,     # Tournament length
+            p1,      # First player
+            p2,      # Second player
+            true,    # Do snapshots
+            clone_generation, # tssia
+            learning_round
+        )
+    else
+        tournament_learning(
+            3,      # no of tournaments
+            0.55,   # Trigger
+            5,      # Max rounds
+            2,      # Tournament length
+            p1,     # First player
+            p2,     # Second player
+            true,    # Do snapshots
+            clone_generation, # tssia
+            learning_round
+        )
+    end
 end
 
