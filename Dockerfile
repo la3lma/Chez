@@ -87,7 +87,7 @@ WORKDIR /data
 
 
 #  Run a learning task
-CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/chezjulia");include("chez.jl"); cd("/data");  learning_increment(); end'
+CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/chezjulia");include("chez.jl"); cd("/data");  learning_increment(true); end'
 
 
 
