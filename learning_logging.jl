@@ -1,4 +1,3 @@
-
 using Pkg
 Pkg.add("DataFrames")
 Pkg.add("CSV")
@@ -41,6 +40,8 @@ function log_learning_round!(
              p2_advantage,
              cloning_triggered,
              clone_generation)
+
+
     push!(log, tuple)
 
     println(stdout, "round $round p2_advantage = $p2_advantage")
@@ -49,16 +50,19 @@ function log_learning_round!(
     end
 
     ## Just trying out the csv thingy. This is not the final interface.
-    CSV.write("learning_round_log.csv", log)
+    filename = "learning_round_log.csv"
+    if ! isfile(filename)
+        CSV.write(filename, log, writeheader=true,  append=false) 
+    else
+        # Write the last tuple.  This is what I want to do
+        # CSV.write(filename, named_tuple, writeheader=false, append=true)
+        # ... but instead this is what I have to do
+        open(filename, "a") do io
+           write(io, "$round,$p1_name,$p2_name,$p1_wins,$p2_wins,$draws,$p2_advantage,$cloning_triggered,$clone_generation\n")
+       end
+    end
 end
 
-
-# using Pkg
-# Pkg.add("DataFrames")
-# Pkg.add("CSV")
-# Pkg.add("IndexedTables")
-# Pkg.add("StatsPlots")
-# Pkg.add("Pandas")
 
 using DataFrames
 using CSV

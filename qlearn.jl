@@ -82,6 +82,40 @@ end
 
 
 
+##
+## Store/restore clone generation number
+##
+
+
+function store_int(arg, filename)
+    open(filename, "w") do io
+        write(io, "$arg\n")
+    end    
+end
+
+function restore_int(filename)
+    if isfile(filename)
+        open(filename, "r") do io
+            l = readline(io)
+            return parse(Int, l)
+        end
+    else
+        return Nothing
+    end
+end
+
+
+
+clone_generation_filename="clone_generation.txt"
+store_clone_generation(clone_generation) = store_int(clone_generation, clone_generation_filename)
+restore_clone_generation() = restore_int(clone_generation_filename)
+
+
+learning_round_filename="learning_round.txt"
+store_learning_round(round) = store_int(round, learning_round_filename)
+restore_learning_round() = restore_int(learning_round_filename)
+
+
 
 ##
 ##  One-hot coding of Q-values
@@ -336,16 +370,26 @@ end
 ##  be an equally good, or almost as good player as itself is.
 ##
 function tournament_learning(
-    no_of_tournaments=100,
+    no_of_tournament_rounds::Int64=100,
     cloning_trigger = 0.55,
     max_rounds_in_tournament_games=200,
     tournament_length = 12,
     player_1 = Nothing,
     player_2 = Nothing,
-    do_snapshots = false)
+    do_snapshots = false,
+    clone_generation = Nothing,
+    initial_tournament_round = Nothing)
 
     log = new_learning_log()
 
+
+    if initial_tournament_round == Nothing
+        initial_tournament_round = 1
+    end
+    
+    if clone_generation == Nothing
+        clone_generation = 1
+    end
 
     if player_1 == Nothing
         player_1  =  new_q_player("Dummy q player",  0.05)
@@ -367,8 +411,11 @@ function tournament_learning(
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
     (p1, p2) = (player_1, player_2)
-    clone_generation = 1
-    for tournament_round in 1:no_of_tournaments
+
+    last_tournament_round = initial_tournament_round + no_of_tournament_rounds
+
+    
+    for tournament_round in initial_tournament_round:last_tournament_round
 
         # Play the tournament
         println("Playing tournament round $tournament_round ")
@@ -410,6 +457,8 @@ function tournament_learning(
         if do_snapshots
             store_q_player(p1, "p1")
             store_q_player(p2, "p2")
+            store_clone_generation(clone_generation)
+            store_learning_round(tournament_round)
         end
     end
 
@@ -447,17 +496,26 @@ run_nano_tournament() = tournament_learning(
 function learning_increment()
     p1 = restore_q_player("p1")
     p2 = restore_q_player("p2")
+    clone_generation = restore_clone_generation()
+    learning_round = restore_learning_round()
 
+    if learning_round != Nothing
+        learning_round += 1
+    end
+
+    println("cl = $clone_generation, lr=$learning_round")
     # Appending to the history is not happening in a proper manner!
 
     tournament_learning(
-        20,     # no of tournaments
+        3,      # no of tournaments
         0.55,   # Trigger
-        20,     # Max rounds
+        5,      # Max rounds
         2,      # Tournament length
         p1,     # First player
         p2,     # Second player
-        true    # Do snapshots
+        true,    # Do snapshots
+        clone_generation, # tssia
+        learning_round
     )
 end
 
