@@ -1,3 +1,13 @@
+import Pkg;
+Pkg.add("CuArrays")
+Pkg.add("Flux")
+Pkg.add("IndexedTables")
+Pkg.add("Pandas")
+Pkg.add("Plots")
+
+
+
+
 include("pieces.jl")
 include("chessboard.jl")
 include("movement.jl")

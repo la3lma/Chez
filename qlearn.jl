@@ -310,11 +310,17 @@ function tournament_learning(
     no_of_tournaments=100,
     cloning_trigger = 0.55,
     max_rounds_in_tournament_games=200,
-    tournament_length = 12)
+    tournament_length = 12,
+    player_1 = Nothing,
+    player_2 = Nothing,
+    do_snapshots = false)
 
     log = new_learning_log()
 
-    random_player   = Player("random player 1", random_choice, nothing)
+
+    if player_1 == Nothing
+        player_1  =  new_q_player("Dummy q player",  0.05)
+    end
 
     # When playing as a learning player, the q_player will
     # select 5% of its moves randomly among the currently available
@@ -324,11 +330,14 @@ function tournament_learning(
     # many things that should b e part of this experimental program in the end:
     # how to test settings of various hyperparameters and how they
     # influence system performance.
-    initial_q_player  = new_q_player("Initial q player",  0.05)
 
+    if player_2 == Nothing
+        player_2  = new_q_player("Initial q player",  0.05)
+    end        
+        
     # Using the random player to bootstrap here. Could equally well
     # have used an initial clone of the initial_q_player.
-    (p1, p2) = (random_player, initial_q_player)
+    (p1, p2) = (player_1, player_2)
     clone_generation = 1
     for tournament_round in 1:no_of_tournaments
 
@@ -364,11 +373,14 @@ function tournament_learning(
         if cloning_triggered
             clone_generation += 1
             clone = clone_q_player("Clone gen $clone_generation q-player", p2)
-            (p1, p2) = (clone, p2)
+            (p1, p2) = (p2, clone)
         end
 
         # Then  learn from this round
         q_learn_tournament_result!(p2, tournament_result)
+        if do_snapshots
+            println("Simulating snapshots")            
+        end
     end
 
     # Finally return the dataframe with the log, and the
@@ -376,7 +388,7 @@ function tournament_learning(
     return (log, p2)
 end
 
-# @test tournament_learning() != nothing
+
 
 run_big_tournament() = tournament_learning(
         20,     # no of tournaments
@@ -391,4 +403,13 @@ run_micro_tournament() = tournament_learning(
         200,    # Max rounds
         10)     # Tournament length
 
+# Only useful for unit testing
+run_nano_tournament() = tournament_learning(
+        2,     # no of tournaments
+        0.55,  # Trigger
+        20,    # Max rounds
+        5)     # Tournament length
+
+
+@test run_nano_tournament != nothing
 
