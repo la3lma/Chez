@@ -1,6 +1,10 @@
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 MAINTAINER rmz@telenordigital.com
 
+##
+##TODO
+##
+#  Maybe consider using this instead? https://hub.docker.com/_/julia
 
 ##
 ## Setting up the linux/julia environent to be able to
