@@ -1,6 +1,4 @@
 using Pkg
-Pkg.add("DataFrames")
-Pkg.add("CSV")
 
 using DataFrames
 using CSV
@@ -68,18 +66,18 @@ using DataFrames
 using CSV
 using IndexedTables
 # using StatsPlots
-using Pandas
+# using Pandas
 
-using Plots
+# using Plots
 
 
-function plot_tournament_result(file="learning_round_log.csv")
+# function plot_tournament_result(file="learning_round_log.csv")
 
-    tournament = CSV.read(file)
-    gr()
-    #  Things we want to plot:  :round
-    plot(tournament[:round],  tournament[:p2advantage])
-end
+#     tournament = CSV.read(file)
+#     gr()
+#     #  Things we want to plot:  :round
+#     plot(tournament[:round],  tournament[:p2advantage])
+# end
 
 # plot(tournament[:round], [tournament[:p2advantage], tournament[:clone_generation]])
 # @df tournament plot(:round, [:p2advantage, :clone_generation]))

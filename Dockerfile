@@ -30,70 +30,19 @@ EXPOSE 8888
 
 
 ##
-## We don't want to run as root, even when in a container.
+##  We'll try to confine ourselves to this directory (mostly)
 ##
-USER 9000  
-
-##
-##  Setting up the Julia environment by pre-loading
-##  pacakges we'll need for GPU-intense Flux.jl workloads.
-##
-# TODO: Rewrite this to use a utility script that gets a list of packages as
-#       parameters.
-RUN julia --eval 'import Pkg; Pkg.add("Flux");           Pkg.build("Flux")'
-RUN julia --eval 'import Pkg; Pkg.add("CuArrays");       Pkg.build("CuArrays")'
-RUN julia --eval 'import Pkg; Pkg.add("CUDAdrv");        Pkg.build("CUDAdrv")'
-RUN julia --eval 'import Pkg; Pkg.add("GPUArrays");      Pkg.build("GPUArrays")'
+WORKDIR /chezjulia/Chez
+RUN julia --eval 'import Pkg; cd("/chezjulia/Chez"); Pkg.activate("."); Pkg.precompile(); Pkg.instantiate()'
+# RUN julia --eval 'import Pkg; Pkg.dev("Chez"); using Chez'
 
 
-##
-## Be able to serve in jupyter notebooks
-##
-
-RUN julia --eval 'import Pkg; Pkg.add("IJulia");         Pkg.build("IJulia")'
-
-
-##
-##  ... and be able to do a number of nice things out of the box in general
-##
-RUN julia --eval 'import Pkg; Pkg.add("FileIO");         Pkg.build("FileIO")'
-RUN julia --eval 'import Pkg; Pkg.add("Colors");         Pkg.build("Colors")'
-RUN julia --eval 'import Pkg; Pkg.add("BenchmarkTools"); Pkg.build("BenchmarkTools")'
-RUN julia --eval 'import Pkg; Pkg.add("ImageShow");      Pkg.build("ImageShow")'
-RUN julia --eval 'import Pkg; Pkg.add("Plots");          Pkg.build("Plots")'
-RUN julia --eval 'import Pkg; Pkg.add("Images");         Pkg.build("Images")'
-RUN julia --eval 'import Pkg; Pkg.add("CSV");            Pkg.build("CSV")'
-RUN julia --eval 'import Pkg; Pkg.add("IndexedTables");  Pkg.build("IndexedTables")'
-RUN julia --eval 'import Pkg; Pkg.add("Pandas");         Pkg.build("Pandas")'
-RUN julia --eval 'import Pkg; Pkg.add("BSON");           Pkg.build("BSON")'
-
-
-RUN julia --eval 'import Pkg; Pkg.resolve()'
-
-WORKDIR /chezjulia
-
-
-# TODO Loading chezjulia as a package would make the load-time lower, consider tht for the future.
-COPY chez.jl /chezjulia
-COPY gameplay.jl /chezjulia
-COPY movement.jl /chezjulia
-COPY plot_tournament.jl /chezjulia
-COPY tests.jl /chezjulia
-COPY chessboard.jl /chezjulia
-COPY learning_logging.jl /chezjulia
-COPY pieces.jl /chezjulia
-COPY qlearn.jl /chezjulia
-
-RUN julia --eval 'include("chez.jl")'
-
+# Perhaps Pkg.add("https://github.com/la3lma/chezjulia/Chez") ? 
 WORKDIR /data
 
-
-
-
 #  Run a learning task
-CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/chezjulia");include("chez.jl"); cd("/data");  learning_increment(true); end'
-
+CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/data"); learning_increment(true); end'
+# or 
 
 
 # Run echo 'alias jupy="jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root"' > /.bashrc
