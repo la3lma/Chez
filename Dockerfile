@@ -28,24 +28,33 @@ RUN pip3 install numpy
 RUN pip3 install pandas
 EXPOSE 8888
 
-
 ##
 ##  We'll try to confine ourselves to this directory (mostly)
 ##
 WORKDIR /chezjulia/Chez
-RUN julia --eval 'import Pkg; cd("/chezjulia/Chez"); Pkg.activate("."); Pkg.precompile(); Pkg.instantiate()'
-# RUN julia --eval 'import Pkg; Pkg.dev("Chez"); using Chez'
+COPY Chez.jl       /chezjulia/Chez 
+COPY Project.toml  /chezjulia/Chez
+COPY src/          /chezjulia/Chez/src/
 
 
-# Perhaps Pkg.add("https://github.com/la3lma/chezjulia/Chez") ? 
+## This is proper yak-shaving, I'm convinced there must be an easier way.
+## to pre-load a package into julia.
+RUN apt-get install -y git
+RUN pwd && git init .
+RUN git config --global user.email "you@example.com"
+RUN git config --global user.name "Your Name"
+RUN git add * && git commit -a -m "initial commit"
+RUN julia --eval 'using Pkg; Pkg.add(PackageSpec(path="/chezjulia/Chez"))'
+RUN julia --eval 'import Pkg; Pkg.build("Chez"); using Chez'
+
+
 WORKDIR /data
 
 #  Run a learning task
-CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/data"); learning_increment(true); end'
+CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/data"); using Chez; Chez.learning_increment(True); end'
 # or 
 
 
-# Run echo 'alias jupy="jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root"' > /.bashrc
 
 # To run a jupyter notebook, run this command in the shell
 # jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
@@ -53,8 +62,8 @@ CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); el
 # To run in docker with GPU support:
 #  docker run --gpus all -v /storageHD/userHome/rmz/git:/git -p 127.0.0.1:8888:8888  -it  4cc9da4ac4bf /bin/bash
 
-
 # docker run --gpus all -v /storageHD/userHome/rmz/git:/git -p 127.0.0.1:8888:8888  -it  a7501342e563 jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 
-
+# Canonic run command without GPU support
+#  docker run  -v $(pwd)/data:/data  -p 127.0.0.1:8888:8888  -it 12abd37d51cc /bin/bash
 
