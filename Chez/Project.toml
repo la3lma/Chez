@@ -1,0 +1,4 @@
+name = "Chez"
+uuid = "6bae15c8-a9ca-4e70-b418-241c7c46fac9"
+authors = ["Bjørn Remseth <la3lma@gmail.com>"]
+version = "0.1.0"

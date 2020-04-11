@@ -30,6 +30,11 @@ EXPOSE 8888
 
 
 ##
+## We don't want to run as root, even when in a container.
+##
+USER 9000  
+
+##
 ##  Setting up the Julia environment by pre-loading
 ##  pacakges we'll need for GPU-intense Flux.jl workloads.
 ##
