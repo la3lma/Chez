@@ -391,8 +391,11 @@ function tournament_learning(
         clone_generation = 1
     end
 
+    force_clone_once = false
+    
     if player_1 == Nothing
-        player_1  =  new_q_player("Dummy q player",  0.05)
+        force_clone_once = true
+        player_1    =  new_q_player("Dummy q player",  0.05)
     end
 
     # When playing as a learning player, the q_player will
@@ -446,10 +449,11 @@ function tournament_learning(
             clone_generation)
 
         # If cloning was triggered, then do  that
-        if cloning_triggered
+        if cloning_triggered || force_clone_once
+            force_clone_once = false
             clone_generation += 1
             clone = clone_q_player("Clone gen $clone_generation q-player", p2)
-            (p1, p2) = (p2, clone)
+            (p1, p2) = (p2, clone) ## Or swap?   No semantic diffenence, but different naming.
         end
 
         # Then  learn from this round
