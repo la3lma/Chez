@@ -53,20 +53,4 @@ RUN julia --eval 'import Pkg; Pkg.build("Chez"); using Chez'
 WORKDIR /data
 
 #  Run a learning task
-CMD julia --eval 'if !isdir("/data"); println("No data bailing out"); exit(); else cd("/data"); using Chez; Chez.learning_increment(true); end'
-
-
-
-# or 
-
-# To run a jupyter notebook, run this command in the shell
-# jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
-
-# To run in docker with GPU support:
-#  docker run --gpus all -v /storageHD/userHome/rmz/git:/git -p 127.0.0.1:8888:8888  -it  4cc9da4ac4bf /bin/bash
-
-# docker run --gpus all -v /storageHD/userHome/rmz/git:/git -p 127.0.0.1:8888:8888  -it  a7501342e563 jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
-
-# Canonic run command without GPU support
-#  docker run  -v $(pwd)/data:/data  -p 127.0.0.1:8888:8888  -it 12abd37d51cc /bin/bash
-
+CMD julia --eval 'if !isdir("/mnt/data"); println("No data bailing out"); exit(); else cd("/mnt/data"); using Chez; Chez.learning_increment(true); end'
