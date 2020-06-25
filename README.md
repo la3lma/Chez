@@ -14,8 +14,34 @@ This will load the code and run unit tests.
 
 ## TODO
 
+### Bugfixes
+
+* Persist player state is buggy in several ways.
+  * Only one of the two player states is stored
+  * Inconsistent states can be written (fix by renamming
+    file after correctely writing it).
+  * The representations are being bloated, for some reason they seem to
+    grow in size in a way that is totally out of proportion to
+    the amount of information that is in the weigh chain.
+  * When writing GPU state, first translate to CPU representation
+    then write. When reading, first read chain into CPU rep
+    then transform to GPU rep.
+
+* The whole package/module thing is still a little confusing to me,
+  so there is probably something wrong there.
+
+* Once the basics (see above) are fixed, then fix these two
+  serious bugs:
+
+  * The chain architecture is just a placeholder, fix it to be useful.
+  * The loss function needs a very thorough review, it's almost certainly
+    wrong.
+    
+
 ### Optimizations
 
+* Make the makefile be reentrant, so that it can be reentrant and started
+  by crontab. This thing should be set up to run for weeks.
 * Make the flux calculations run using a GPU
 * Make the scalar computations (chessplaying in particular) run in
   paralell (one process per game). It's a rediculously parallell
@@ -28,7 +54,7 @@ This will load the code and run unit tests.
 * Detect move repetition to signal draws.
 * Let the game board contain the state of the rookings, and movements of the king/rooks.
 * Implement en-passant
-
+ 
 
 ### Reflection on the current state
 
