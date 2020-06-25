@@ -310,7 +310,6 @@ todevice(x) = use_gpu ? gpu(x) : x
 ##
 
 
-
 ## XXX The chain being  used here is just made  up at the spur of the moment.
 ##     it needs to be properly engineered and tuned. Right now it's just
 ##     a placeholder to get the rest of the machinery in place.
@@ -335,10 +334,9 @@ new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =
         Dict{Array{Bool,1},Float32}(),
         randomness)
 
-
 ###
 ###  Next generation tournament-based players
-###  (when this works, refactor much of the code above into oblivion)
+###  TODO: (when this works, refactor much of the code above into oblivion)
 ###
 
 function new_q_player(name, randomness)
@@ -359,6 +357,17 @@ end
 function q_learn_tournament_result!(learning_player, tournament_result)
     q_learn!(learning_player.state,  tournament_result.games)
 end
+
+
+#####
+## TODO: Move elsewhere
+
+function test_saving_players()
+    s = new_q_player("foobar", 0.05)
+    store_q_player(a, "foobar")
+end
+
+####
 
 
 
