@@ -56,12 +56,15 @@ function wipe_cache!(qs::Q_learning_state)
 end
 
 
-
 ###
 ### Storing and restoring q players' weights
 ###
 using BSON: @save
 using BSON: @load
+
+
+## TODO: Check if GPU is being used, and if it is, then transform
+##       chain to/from CPU before/after writing/writing.
 
 function store_q_player(p, name)
     @save "$name.bson" p
@@ -507,8 +510,7 @@ function learning_increment(prod=false)
         learning_round += 1
     end
 
-
-    # Appending to the history is not happening in a proper manner!
+    # TODO: Appending to the history is not happening in a proper manner!
 
     if prod
         tournament_learning(
@@ -530,7 +532,7 @@ function learning_increment(prod=false)
             2,      # Tournament length
             p1,     # First player
             p2,     # Second player
-            true,    # Do snapshots
+            true,   # Do snapshots
             clone_generation, # tssia
             learning_round
         )
