@@ -22,7 +22,7 @@ run-detach:
 	 docker run ${GPUS}   ${CPUS}  ${MOUNTPOINTS}  -d  ${REPO}:latest
 
 jupyter:
-	docker run ${GPUS}  ${CPUS}  ${MOUNTPOINTS} -p 127.0.0.1:8888:8888  -it ${REPO}:latest notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
+	docker run ${GPUS}  ${CPUS}  ${MOUNTPOINTS} -p 127.0.0.1:8888:8888  -it ${REPO}:latest jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 
 clean:
 	find . -name '*~' -exec rm -f {} \;

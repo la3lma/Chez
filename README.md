@@ -1,20 +1,24 @@
 # chezjulia
 
 
-A little finger exercise to get a feel for julia, may also contain
+A little "fingering exercise" to get a feel for Julia, may also contain
 elements of a chess program ;-)
 
 To run it, start julia, then run
 
-      include("chez.jl")
+      include("src/Chez.jl")
 
 
-This will load the code and run unit tests.
+This will load the code and run unit tests. 
 
 
 ## TODO
 
+
+* Make instructions for how to start easily from the command line.
+
 ### Bugfixes
+
 
 * Persist player state is buggy in several ways.
   * Only one of the two player states is stored
