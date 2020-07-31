@@ -48,25 +48,25 @@ RUN julia --eval 'using Pkg; Pkg.add("DataFrames")'
 RUN julia --eval 'using Pkg; Pkg.add("IndexedTables")'
 RUN julia --eval 'using Pkg; Pkg.add("Plots")'
 RUN julia --eval 'using Pkg; Pkg.add("Printf")'
-RUN julia --eval 'using Pkg; Pkg.add("Printf")'
+RUN julia --eval 'using Pkg; Pkg.add("NNlib")'
 RUN julia --eval 'using Flux, Test, BSON, CSV, DataFrames, IndexedTables, Plots, Printf, Pkg; Pkg.build()'
 
 
-RUN apt-get install -y git
-RUN pwd && git init .
-RUN git config --global user.email "you@example.com"
-RUN git config --global user.name "Your Name"
+# RUN apt-get install -y git
+# RUN pwd && git init .
+# RUN git config --global user.email "you@example.com"
+# RUN git config --global user.name "Your Name"
 
 
 COPY Project.toml  /Chez
 COPY src/          /Chez/src/
 
 
-RUN git add * && git commit -a -m "initial commit"
-RUN julia --eval 'using Pkg; Pkg.add(PackageSpec(path="/Chez"))'
-RUN julia --eval 'import Pkg; Pkg.build("Chez"); using Chez'
+# RUN git add * && git commit -a -m "initial commit"
+# RUN julia --eval 'using Pkg; Pkg.add(PackageSpec(path="/Chez"))'
+# RUN julia --eval 'import Pkg; Pkg.build("Chez"); using Chez'
 
 WORKDIR /data
 
 #  Run a learning task
-CMD julia --eval 'if !isdir("/mnt/data"); println("No data bailing out"); exit(); else cd("/mnt/data"); using Chez; Chez.learning_increment(false); end'
+# CMD julia --eval 'if !isdir("/mnt/data"); println("No data bailing out"); exit(); else cd("/mnt/data"); using Chez; Chez.learning_increment(false); end'
