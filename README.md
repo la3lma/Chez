@@ -20,16 +20,17 @@ This will load the code and run unit tests.
 ### Bugfixes
 
 
+* Make micro game that plays really fast to debug the
+  persistence bug.
+
 * Persist player state is buggy in several ways.
-  * Only one of the two player states is stored
   * Inconsistent states can be written (fix by renamming
     file after correctely writing it).
   * The representations are being bloated, for some reason they seem to
     grow in size in a way that is totally out of proportion to
     the amount of information that is in the weigh chain.
-  * When writing GPU state, first translate to CPU representation
-    then write. When reading, first read chain into CPU rep
-    then transform to GPU rep.
+
+* Make the interface to the loss function much less baroque.
 
 * The whole package/module thing is still a little confusing to me,
   so there is probably something wrong there.
@@ -44,8 +45,7 @@ This will load the code and run unit tests.
 
 ### Optimizations
 
-* Make the makefile be reentrant, so that it can be reentrant and started
-  by crontab. This thing should be set up to run for weeks.
+* Make it possible to run this thing, with snapshotting, for weeks.
 * Make the flux calculations run using a GPU
 * Make the scalar computations (chessplaying in particular) run in
   paralell (one process per game). It's a rediculously parallell
@@ -53,7 +53,6 @@ This will load the code and run unit tests.
   available.
 
 ### Game mechanics
-
 
 * Detect move repetition to signal draws.
 * Let the game board contain the state of the rookings, and movements of the king/rooks.
@@ -84,15 +83,6 @@ Now, using a simpler game, like "four in a row" will also make it
 possible to learn from other people's work (see some references
 below).  That will obviously be useful too.
 
-One change that will need to be implemented very soon, and could be
-done using the existing chess machinery as a mock for future games, is
-to set up tournaments with players.  The players will have state
-represented as a set of neural networks, and a few identifying bits.
-Alphago apparently trains itself (find reference) by starting with two
-identical models, then playing a mutating version of itself against a
-static version.  When the mutating version has a 55% win rate over the
-static version, the mutating version is cloned and becomes its own
-static version, and the cycle repeats. Something like that.
 
 The actual Q-learning, SARSA, position/move evaluation whatever
 algorithms that are plugged in, with whatever generic heuristics
@@ -109,33 +99,20 @@ consistent manner, and to be able to plot evolution of performance
 over time.   Some ideas are:
 
  * Use sqlite or the julia-native database thing to log values.
- * Read the Q-learning papers (and other) and shamelessly copy
+ * Re-read the Q-learning papers (and other) and shamelessly copy
    their metrics and graphs.  Reproduce them.
  * Use these metrics to track progress of the learning algorithms
    over time, across classes of games, and instances of games.
  * Don't be cute, use denormalized tables, one per metric,
 
 
-Finally.  It's getting lonely.  I need to find some forum to discuss
-this stuff in.  I need someone to play ball with, bounce ideas off,
-get feedback, also rubber duck.
-
-
 ### Strategy development
 
-* Minimax player.
-* Minimax player with alpha-beta pruing.
 * Deep neural network, reinforcement learning player based on Flux.jl
    - Map game-states into neural network representations
    - Design a network architecture to either find next move or evaluate positions.
    - Design a "goodness" criterion for strategies.
-   - Find a way to make this architecture learn by playing against itself.
-   - => Alpha zero light
 
-### Tactical (development, software engineering) improvements
-
-* Stop using untyped touples holding game/tournament results. Use structs with
-  named types and named components
 
 References
 ### 
