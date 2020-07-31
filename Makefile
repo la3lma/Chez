@@ -12,6 +12,17 @@ CPUS := --cpus="6"
 
 MOUNTPOINTS :=  -v ${DATADIR}:/mnt/data
 
+
+
+test:
+	 julia --eval 'using Chez; Chez.learning_increment(false)'
+
+#
+#  None of the docker stuff seems to be working very well
+#
+#
+
+
 package:
 	docker build -f Dockerfile -t ${REPO} .
 
