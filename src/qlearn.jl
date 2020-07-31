@@ -44,7 +44,7 @@ one_hot_encode_chess_state(state, move_being_queried, action_history = nothing ,
 
 
 mutable struct Q_learning_state
-    chain
+    chain::Flux.Chain
     cache::Dict
     randomness::Float64
 end
@@ -279,14 +279,16 @@ function q_learn!(qs, episodes)
 
     learning_episodes = todevice(learning_episodes)
 
-    chain = qs.chain |> gpu
-    learning_episodes = learning_episodes |> gpu
+    chain = todevice(qs.chain)
+    learning_episodes = todevice(learning_episodes)
 
-    ## Don't really knwo how to set up the loss function
+    ## Don't really know how to set up the loss function
     # loss(x, y) = Flux.mse(chain(x), y)
     #  ... the value below is failing!
     # loss(x, y) = one_hot_coded_q_values_difference(chain(x), y)
-    loss(x,y) = Flux.crossentropy(chain(x),y)
+    # The one below fails on docker
+    # loss(x, y) = Flux.crossentropy(chain(x), y)
+    loss(x, y) = Flux.crossentropy(chain(x), y)
     
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
@@ -297,11 +299,20 @@ function q_learn!(qs, episodes)
         Flux.train!(loss, ps, episode, opt)
     end
 
+    # The chain we store in the data structure is always the
+    # CPU version,  so that we can be consistent when reading
+    # and writing it.
     qs.chain = chain |> cpu
     println()
 end
 
-use_gpu = true
+
+##
+## A quick hack to be able to send something from cpu to the compute
+## device either throug transformation to GPU structure,  if rnning a GPU
+## or through identity if we're just using the host CPU.
+##
+use_gpu = false
 todevice(x) = use_gpu ? gpu(x) : x
 
 
@@ -319,12 +330,14 @@ new_q_chain() =
         Dense(960, 960, relu),
         Dense(960, 400, relu),
         Dense(400, 200, relu),
-        Dense(200, 200, relu),
-        Dense(200, 200, relu),
-        Dense(200, 200, relu),
-        Dense(200, 200, relu),
-        Dense(200, 200, relu),
-        Dense(200, 200, relu),
+        # This architecture is just nonsense anyway, do I'm reducing it in size
+        # for easier debugging of the surrounding code
+        #        Dense(200, 200, relu),
+        #        Dense(200, 200, relu),
+        #        Dense(200, 200, relu),
+        #        Dense(200, 200, relu),
+        #        Dense(200, 200, relu),
+        #        Dense(200, 200, relu),
         Dense(200, no_of_output_nodes_to_encode_q),
         softmax)
 
@@ -372,7 +385,7 @@ end
 
 
 ##
-##  Tournament learning.  Starting with one random player and
+##  Tournament learning (self learning).  Starting with one random player and
 ##  one learning player.  Until the required number of tournaments has
 ##  been run, play the players against each other. Let the learning player
 ##  learn until it beats the non-learning player in 55% or more of the
@@ -388,7 +401,7 @@ function tournament_learning(
     tournament_length = 12,
     player_1 = Nothing,
     player_2 = Nothing,
-    do_snapshots = false,
+    do_snapshots = true,
     clone_generation = Nothing,
     initial_tournament_round = Nothing)
 
@@ -407,7 +420,7 @@ function tournament_learning(
     
     if player_1 == Nothing
         force_clone_once = true
-        player_1    =  new_q_player("Dummy q player",  0.05)
+        player_1    =  new_q_player("Initial q player (1)",  0.05)
     end
 
     # When playing as a learning player, the q_player will
@@ -420,7 +433,7 @@ function tournament_learning(
     # influence system performance.
 
     if player_2 == Nothing
-        player_2  = new_q_player("Initial q player",  0.05)
+        player_2  = new_q_player("Initial q player (2)",  0.05)
     end        
         
     # Using the random player to bootstrap here. Could equally well
@@ -471,10 +484,12 @@ function tournament_learning(
         # Then  learn from this round
         q_learn_tournament_result!(p2, tournament_result)
         if do_snapshots
+            println("Snapshotting players in  round ... $tournament_round ...")
             store_q_player(p1, "p1")
             store_q_player(p2, "p2")
             store_clone_generation(clone_generation)
             store_learning_round(tournament_round)
+            println("    ... Done")            
         end
     end
 
