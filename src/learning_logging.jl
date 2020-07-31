@@ -50,7 +50,7 @@ function log_learning_round!(
     ## Just trying out the csv thingy. This is not the final interface.
     filename = "learning_round_log.csv"
     if ! isfile(filename)
-        CSV.write(filename, log, writeheader=true,  append=false) 
+        CSV.write(filename, log, header=true,  append=false) 
     else
         # Write the last tuple.  This is what I want to do
         # CSV.write(filename, named_tuple, writeheader=false, append=true)
