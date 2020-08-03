@@ -210,8 +210,8 @@ end
 ## Calculate the rewards from winnings and draws
 ##
 
-reward(x::Draw, color::Color) = 0
-reward(x::Win, color::Color)  = (x.winner == color) ? 1 : -1
+reward(x::Draw, color::Color)  = 0
+reward(x::Win,  color::Color)  = (x.winner == color) ? 1 : -1
 
 
 deconstruct_episode(r::Game_Result) = (r.outcome, r.move_history, r.board_history)
