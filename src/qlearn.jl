@@ -134,12 +134,16 @@ restore_learning_round() = restore_int(learning_round_filename)
 
 
 ##
-##  One-hot coding of Q-values
+##  Encoding of Q-values
 ##
 
+
+# The q-values are discrete values i the range 0-100
 no_of_output_nodes_to_encode_q=100
 
-function one_hot_encode_q(x)
+
+# The input values are in the range 0-1, inclusive
+function encode_q(x)
     @assert (x >= -1) "$x >= -1 failed"
     @assert (x <=  1) "$x <=  1 failed"
     idx = trunc(Int, no_of_output_nodes_to_encode_q * (x+1)/2)
@@ -151,7 +155,7 @@ function one_hot_encode_q(x)
     return r
 end
 
-function one_cold_decode_q(x)
+function decode_q(x)
     decode_index(i::CartesianIndex) = i[2]
     decode_index(i::Int) = i
     idx = argmax(x)
@@ -159,14 +163,18 @@ function one_cold_decode_q(x)
     return  2*(idx/no_of_output_nodes_to_encode_q) - 1
 end
 
-@test one_cold_decode_q(one_hot_encode_q(0.0)) == 0.0
+# encode_q(q) = q
+# decode_q(q) = q
+
+
+@test decode_q(encode_q(0.0)) == 0.0
 
 
 function raw_q_lookup(qs::Q_learning_state, encoded_statemove)
     if haskey(qs.cache, encoded_statemove)
         return qs.cache[encoded_statemove]
     else
-        result = one_cold_decode_q(qs.chain(encoded_statemove))
+        result = decode_q(qs.chain(encoded_statemove))
         qs.cache[encoded_statemove] = result
         return result
     end
@@ -174,6 +182,13 @@ end
 
 get_q_value(qs, state, move, action_history, state_history) =
     raw_q_lookup(qs, one_hot_encode_chess_state(state, move))
+
+
+
+##
+## Using Q-values to generate new choices
+##
+
 
 
 # Find the maximm value in the sequence, then return
@@ -269,7 +284,7 @@ function learn_from_episode(qs, episode)
         q_to_encode = 2*sigmoid(new_q) - 1
         #    println("Episode $t has q to encode = $q_to_encode")
 
-        onehot_q = one_hot_encode_q(q_to_encode)
+        onehot_q = encode_q(q_to_encode)
         learning_tuple = [esm, onehot_q]
         push!(learning_tuples, learning_tuple)
     end
@@ -277,9 +292,9 @@ function learn_from_episode(qs, episode)
 end
 
 
-function one_hot_coded_q_values_difference(q1,q2)
-    v1 = one_cold_decode_q(q1)
-    v2 = one_cold_decode_q(q2)
+function encoded_q_values_difference(q1,q2)
+    v1 = decode_q(q1)
+    v2 = decode_q(q2)
     return v1 - v2
 end
 
@@ -298,7 +313,7 @@ function q_learn!(qs, episodes)
     ## Don't really know how to set up the loss function
     # loss(x, y) = Flux.mse(chain(x), y)
     #  ... the value below is failing!
-    # loss(x, y) = one_hot_coded_q_values_difference(chain(x), y)
+    # loss(x, y) = encoded_q_values_difference(chain(x), y)
     # The one below fails on docker
     # loss(x, y) = Flux.crossentropy(chain(x), y)
     loss(x, y) = Flux.crossentropy(chain(x), y)
