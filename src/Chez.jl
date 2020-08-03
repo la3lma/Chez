@@ -1,6 +1,6 @@
 module Chez
 
-using Flux, Test, BSON, CSV, DataFrames, IndexedTables, Pkg, Plots, Printf    
+using Flux, Test, BSON, CSV, DataFrames, IndexedTables, Pkg, Plots, Printf,  NNlib
 export Player, ChessBoard, Coord, Player, Win , Draw , Game_Result,Tournament_Result, Move, Color, Pawn , Rook , Knight , Bishop , Queen, King , Blank , ChessPiece, Q_learning_state, learning_increment
 
 
@@ -16,7 +16,10 @@ println("including -> learning_logging.jl")
 include("learning_logging.jl")
 println("including -> qlearn.jl")
 include("qlearn.jl")
-println("Done loading chez.jl")
+println("including tournament-learning.jl")
+include("tournament-learning.jl")
+
+println("Done loading Chez.jl")
 
 
 end # module

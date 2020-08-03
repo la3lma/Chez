@@ -13,9 +13,17 @@ CPUS := --cpus="6"
 MOUNTPOINTS :=  -v ${DATADIR}:/mnt/data
 
 
+clean:
+	# This reflect unclean management of temporary files
+	rm -f learning_round.txt
+	rm -f *.bson
+	# This represents emacs droppings
+	find . -name '*~' -exec rm -f {} \;
 
-test:
-	 julia --eval 'using Chez; Chez.learning_increment(false)'
+
+
+test:	clean
+	julia --eval 'include("src/Chez.jl"); Chez.learning_increment(false)'
 
 #
 #  None of the docker stuff seems to be working very well
@@ -34,6 +42,3 @@ run-detach:
 
 jupyter:
 	docker run ${GPUS}  ${CPUS}  ${MOUNTPOINTS} -p 127.0.0.1:8888:8888  -it ${REPO}:latest jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
-
-clean:
-	find . -name '*~' -exec rm -f {} \;
