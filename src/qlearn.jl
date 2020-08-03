@@ -139,32 +139,38 @@ restore_learning_round() = restore_int(learning_round_filename)
 
 
 # The q-values are discrete values i the range 0-100
-no_of_output_nodes_to_encode_q=100
+#  using one-hot coding
+# no_of_output_nodes_to_encode_q=100
+
+# ... but now we're going for direct encoding, full relu.
+no_of_output_nodes_to_encode_q=1
 
 
-# The input values are in the range 0-1, inclusive
-function encode_q(x)
-    @assert (x >= -1) "$x >= -1 failed"
-    @assert (x <=  1) "$x <=  1 failed"
-    idx = trunc(Int, no_of_output_nodes_to_encode_q * (x+1)/2)
-    @assert(idx > 0)
-    @assert(idx <= no_of_output_nodes_to_encode_q)
-    result = zeros(Bool, no_of_output_nodes_to_encode_q)
-    result[idx] = 1
-    r = permutedims(result)
-    return r
-end
+# # The input values are in the range 0-1, inclusive
+# function encode_q(x)
+#     @assert (x >= -1) "$x >= -1 failed"
+#     @assert (x <=  1) "$x <=  1 failed"
+#     idx = trunc(Int, no_of_output_nodes_to_encode_q * (x+1)/2)
+#     @assert(idx > 0)
+#     @assert(idx <= no_of_output_nodes_to_encode_q)
+#     result = zeros(Bool, no_of_output_nodes_to_encode_q)
+#     result[idx] = 1
+#     r = permutedims(result)
+#     return r
+# end
 
-function decode_q(x)
-    decode_index(i::CartesianIndex) = i[2]
-    decode_index(i::Int) = i
-    idx = argmax(x)
-    idx = decode_index(idx)
-    return  2*(idx/no_of_output_nodes_to_encode_q) - 1
-end
 
-# encode_q(q) = q
-# decode_q(q) = q
+# # output in the range [ -1 - 1] 
+# function decode_q(x)
+#     decode_index(i::CartesianIndex) = i[2]
+#     decode_index(i::Int) = i
+#     idx = argmax(x)
+#     idx = decode_index(idx)
+#     return  2*(idx/no_of_output_nodes_to_encode_q) - 1
+# end
+
+encode_q(q) = q
+decode_q(q) = q
 
 
 @test decode_q(encode_q(0.0)) == 0.0
@@ -175,6 +181,10 @@ function raw_q_lookup(qs::Q_learning_state, encoded_statemove)
         return qs.cache[encoded_statemove]
     else
         result = decode_q(qs.chain(encoded_statemove))
+        result = result[1]
+        println("encoded_statemove=  $encoded_statemove")
+        println("result =  $result")
+        
         qs.cache[encoded_statemove] = result
         return result
     end
@@ -182,7 +192,6 @@ end
 
 get_q_value(qs, state, move, action_history, state_history) =
     raw_q_lookup(qs, one_hot_encode_chess_state(state, move))
-
 
 
 ##
@@ -316,7 +325,9 @@ function q_learn!(qs, episodes)
     # loss(x, y) = encoded_q_values_difference(chain(x), y)
     # The one below fails on docker
     # loss(x, y) = Flux.crossentropy(chain(x), y)
-    loss(x, y) = Flux.crossentropy(chain(x), y)
+    # loss(x, y) = Flux.crossentropy(chain(x), y)
+    loss(x, y) = chain(x)[1] - y
+
     
     ps = Flux.params(chain)
     opt =  ADAM() # uses the default η = 0.001 and β = (0.9, 0.999)
@@ -366,8 +377,9 @@ new_q_chain() =
         #        Dense(200, 200, relu),
         #        Dense(200, 200, relu),
         #        Dense(200, 200, relu),
-        Dense(200, no_of_output_nodes_to_encode_q),
-        softmax)
+        Dense(200, no_of_output_nodes_to_encode_q)#,
+        #softmax
+    )
 
 new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =
     Q_learning_state(
