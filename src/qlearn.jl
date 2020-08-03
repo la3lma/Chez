@@ -11,10 +11,15 @@
 
 ##
 ##  One-hot coding of game state and moves.
+##  Moves are encoded as from/to pairs indicating a move from
+##  one of the 64 possible locations to another of the 64 locations.
+##  This is ok for many moves, but not for rookings or subsitutions, but at this
+##  time we're ont including thos moves.
 ##
 
 using Flux
-using Flux: onehot, onecold
+using Flux: onehot
+
 
 one_hot_encode_coordinate_pair(source::Coord, destination::Coord) =
     transpose(vcat(onehot(source,      all_chessboard_locations),
@@ -34,8 +39,8 @@ end
 @test length(one_hot_encode_board(startingBoard)) ==  (13 * 64)
 
 
-one_hot_encode_chess_state(state, move_being_queried, action_history = nothing , state_history = nothing) =
-     collect(Iterators.flatten([one_hot_encode_board(state), one_hot_encode_move(move_being_queried)]))
+one_hot_encode_chess_state(state, move, action_history = nothing , state_history = nothing) =
+     collect(Iterators.flatten([one_hot_encode_board(state), one_hot_encode_move(move)]))
 
 
 @test length(one_hot_encode_chess_state(startingBoard, Move(Coord(1,1), Coord(2,2), false, bp, bp))) == 960
@@ -113,6 +118,9 @@ function restore_int(filename)
 end
 
 
+##
+##  Storing players persistently.
+##
 
 clone_generation_filename="clone_generation.txt"
 store_clone_generation(clone_generation) = store_int(clone_generation, clone_generation_filename)
