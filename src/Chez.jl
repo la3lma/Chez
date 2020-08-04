@@ -1,6 +1,6 @@
 module Chez
 
-using Flux, Test, BSON, CSV, DataFrames, IndexedTables, Pkg, Plots, Printf,  NNlib
+using Flux, Test, BSON, CSV, DataFrames, IndexedTables, Pkg, Plots, Printf,  NNlib, JLD, HDF5
 export Player, ChessBoard, Coord, Player, Win , Draw , Game_Result,Tournament_Result, Move, Color, Pawn , Rook , Knight , Bishop , Queen, King , Blank , ChessPiece, Q_learning_state, learning_increment
 
 
