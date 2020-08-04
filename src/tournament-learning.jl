@@ -153,7 +153,7 @@ function learning_increment(prod=false)
 
     if prod
         tournament_learning(
-            10,      # no of tournaments
+            100,      # no of tournaments
             0.55,    # Trigger
             200,     # Max rounds
             100,     # Tournament length
