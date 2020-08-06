@@ -182,9 +182,6 @@ function raw_q_lookup(qs::Q_learning_state, encoded_statemove)
     else
         result = decode_q(qs.chain(encoded_statemove))
         result = result[1]
-        println("encoded_statemove=  $encoded_statemove")
-        println("result =  $result")
-        
         qs.cache[encoded_statemove] = result
         return result
     end
@@ -287,14 +284,10 @@ function learn_from_episode(qs, episode)
         # Since this is an adversarial game, every other
         # round we need to flip the value estimate's sign
         future_value_estimate = - new_q
-        # Kludge to avoid the q value going above 1 (which may or may not
-        # be very important to do.
 
-        q_to_encode = 2*sigmoid(new_q) - 1
-        #    println("Episode $t has q to encode = $q_to_encode")
-
-        onehot_q = encode_q(q_to_encode)
-        learning_tuple = [esm, onehot_q]
+        encoded_q = encode_q(new_q)
+        learning_tuple = (esm, encoded_q)
+        println("Learning tuple = $learning_tuple")
         push!(learning_tuples, learning_tuple)
     end
     return learning_tuples
@@ -312,21 +305,11 @@ function q_learn!(qs, episodes)
 
     println("Q-learning")
 
-    learning_episodes = map(episode -> learn_from_episode(qs, episode), episodes)
-
+    learning_episodes = map(e -> learn_from_episode(qs, e), episodes)
     learning_episodes = todevice(learning_episodes)
+    chain             = todevice(qs.chain)
 
-    chain = todevice(qs.chain)
-    learning_episodes = todevice(learning_episodes)
-
-    ## Don't really know how to set up the loss function
-    # loss(x, y) = Flux.mse(chain(x), y)
-    #  ... the value below is failing!
-    # loss(x, y) = encoded_q_values_difference(chain(x), y)
-    # The one below fails on docker
-    # loss(x, y) = Flux.crossentropy(chain(x), y)
-    # loss(x, y) = Flux.crossentropy(chain(x), y)
-    loss(x, y) = chain(x)[1] - y
+    loss(x, y) = (chain(x)[1] - y)^2
 
     
     ps = Flux.params(chain)
