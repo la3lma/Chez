@@ -124,6 +124,9 @@ struct Tournament_Result
     draws
 end
 
+has_wins(t::Tournament_Result) ::Bool = t.p1wins != 0 || t.p2wins != 00
+
+
 player_is_winner(w::Win,  p::Player)  = (p == w.player)
 player_is_winner(w::Draw, p::Player)  = false
 

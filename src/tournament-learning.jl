@@ -96,8 +96,11 @@ function tournament_learning(
             (p1, p2) = (p2, clone) ## Or swap?   No semantic diffenence, but different naming.
         end
 
-        # Then  learn from this round
-        q_learn_tournament_result!(p2, tournament_result)
+        # If  at least one of the players won anyting, then learn from that.
+        if has_wins(tournament_result) 
+            q_learn_tournament_result!(p2, tournament_result)
+        end
+        
         if do_snapshots
             # TODO:  Do this via a callback to a snapshotting mechanism.
             println("Snapshotting players in  round ... $tournament_round ...")
