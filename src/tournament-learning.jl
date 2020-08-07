@@ -62,7 +62,7 @@ function tournament_learning(
 
         # Play the tournament
         println("Playing tournament round $tournament_round ")
-        tournament_result     = play_tournament(
+        tournament_result = play_tournament(
             p1,
             p2,
             max_rounds_in_tournament_games,
@@ -75,7 +75,7 @@ function tournament_learning(
         cloning_triggered =  (p2_advantage >= cloning_trigger)
 
         # Log  the current learning round into a dataframe ("log")
-        # so that we can keep track of progress.
+        # so that we can keep track of progress (TODO: do this in a callback also)
         log_learning_round!(
             log,
             tournament_round,
@@ -99,11 +99,12 @@ function tournament_learning(
         # Then  learn from this round
         q_learn_tournament_result!(p2, tournament_result)
         if do_snapshots
+            # TODO:  Do this via a callback to a snapshotting mechanism.
             println("Snapshotting players in  round ... $tournament_round ...")
             store_q_player(p1, "p1")
             store_q_player(p2, "p2")
-            store_clone_generation(clone_generation)
-            store_learning_round(tournament_round)
+#            store_clone_generation(clone_generation)
+#            store_learning_round(tournament_round)
             println("    ... Done")            
         end
     end
@@ -143,8 +144,11 @@ function learning_increment(prod=false)
     p1 = restore_q_player("p1")
     p2 = restore_q_player("p2")
     clone_generation = restore_clone_generation()
-    learning_round = restore_learning_round()
+# Next stop is to make store/restore work, but for now it's disabled.    
+#    learning_round = restore_learning_round()
 
+    learning_round = 0
+    
     if learning_round != Nothing
         learning_round += 1
     end
@@ -167,7 +171,7 @@ function learning_increment(prod=false)
         tournament_learning(
             3,      # no of tournaments
             0.55,   # Trigger
-            5,      # Max rounds
+            500,    # Max rounds
             2,      # Tournament length
             p1,     # First player
             p2,     # Second player

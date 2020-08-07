@@ -165,10 +165,11 @@ function play_tournament(
     player2::Player,
     max_rounds=200,
     tournament_length = 10,
-    io::IO = devnull)::Tournament_Result
-
+    io::IO = stdout)::Tournament_Result
 
     function play_game(p1, p2)
+
+        println(io, "Playing a game")
         (active_player, inactive_player) = (p1, p2)
 
         color = white
@@ -180,21 +181,22 @@ function play_tournament(
         outcome = Draw()
         
         while (!game_is_won && round < max_rounds + 1)
+            println("round = $round")
             active_strategy = active_player.strategy
-            println(io, "Round " , round, " color ", color)
+            # println(io, "Round " , round, " color ", color)
             available_moves = get_moves(color, board)
             if (!isempty(available_moves))
-                println(io, "Number of moves available = ", length(available_moves))
-                println(io, "Moves available = ", available_moves)
+                # println(io, "Number of moves available = ", length(available_moves))
+                # println(io, "Moves available = ", available_moves)
 
                 next_move = active_strategy(board, available_moves, move_history, board_history)
-                println(io, "Applying next_move ",  next_move)
+                # println(io, "Applying next_move ",  next_move)
                 board = apply_move!(next_move, board)
 
                 push!(move_history,  next_move)
                 push!(board_history, board)
 
-                println(io, board)
+                # println(io, board)
                 game_is_won = captures_king(next_move)
                 if game_is_won
                     println(io, "Game is won by ",  color)
@@ -205,12 +207,18 @@ function play_tournament(
             color = other_color(color)
             (active_player, inactive_player) = (inactive_player, active_player)
         end
+
+        println(io, "Outcome = $outcome")
         return Game_Result(p1, p2, outcome, move_history, board_history)
     end
 
+    println(io, "Before playing games")
+    println(io, "player1 = $player1")
+    println(io, "player2 = $player2")
     # In the tournament, the players play every other game as white.
     games = [ iseven(i) ?  play_game(player1, player2) : play_game(player2, player1)
               for i in 1:tournament_length ]
+    println(io, "After playing games")
 
     ## Inefficient way of calculating these things.
     p1wins = count_wins_for_player(games, player1)

@@ -83,6 +83,8 @@ end
 
 function restore_q_player(name)
     filename = "$name.bson"
+    # TODO: This is just to force the filename to disappear
+    rm(filename, force=true)
     if isfile(filename)
         @load filename p
         strategy = new_q_choice(p.state)
@@ -287,7 +289,6 @@ function learn_from_episode(qs, episode)
 
         encoded_q = encode_q(new_q)
         learning_tuple = (esm, encoded_q)
-        println("Learning tuple = $learning_tuple")
         push!(learning_tuples, learning_tuple)
     end
     return learning_tuples
@@ -349,19 +350,10 @@ todevice(x) = use_gpu ? gpu(x) : x
 
 new_q_chain() =
     Chain(
-        Dense(960, 960, relu),
         Dense(960, 400, relu),
         Dense(400, 200, relu),
-        # This architecture is just nonsense anyway, do I'm reducing it in size
-        # for easier debugging of the surrounding code
-        #        Dense(200, 200, relu),
-        #        Dense(200, 200, relu),
-        #        Dense(200, 200, relu),
-        #        Dense(200, 200, relu),
-        #        Dense(200, 200, relu),
-        #        Dense(200, 200, relu),
-        Dense(200, no_of_output_nodes_to_encode_q)#,
-        #softmax
+        Dense(200, 100, relu),
+        Dense(100, no_of_output_nodes_to_encode_q)
     )
 
 new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =
