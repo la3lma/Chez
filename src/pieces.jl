@@ -79,19 +79,19 @@ function ==(cp1::ChessPiece, cp2::ChessPiece)
 	 (cp1.printrep == cp2.printrep)
 end
 
-bp  = ChessPiece(black, pawn,   "P", "♟");
-br  = ChessPiece(black, rook,   "R", "♜");
-bk  = ChessPiece(black, knight, "G", "♞")
-bb  = ChessPiece(black, bishop, "B", "♝");
-bq  = ChessPiece(black, queen,  "Q", "♛");
-bki = ChessPiece(black, king,   "K", "♚");
+bp  = ChessPiece(black, pawn,   "p", "♟");
+br  = ChessPiece(black, rook,   "r", "♜");
+bk  = ChessPiece(black, knight, "g", "♞")
+bb  = ChessPiece(black, bishop, "b", "♝");
+bq  = ChessPiece(black, queen,  "q", "♛");
+bki = ChessPiece(black, king,   "k", "♚");
 
-wp  = ChessPiece(white, pawn,   "p", "♙");
-wr  = ChessPiece(white, rook,   "r", "♖");
-wk  = ChessPiece(white, knight, "g", "♘");
-wb  = ChessPiece(white, bishop, "b", "♗");
-wq  = ChessPiece(white, queen,  "q", "♕");
-wki = ChessPiece(white, king,   "k", "♔");
+wp  = ChessPiece(white, pawn,   "P", "♙");
+wr  = ChessPiece(white, rook,   "R", "♖");
+wk  = ChessPiece(white, knight, "G", "♘");
+wb  = ChessPiece(white, bishop, "B", "♗");
+wq  = ChessPiece(white, queen,  "Q", "♕");
+wki = ChessPiece(white, king,   "K", "♔");
 
 bs = ChessPiece(transparent, blank,  " ",  " ");
 

@@ -168,12 +168,12 @@ end
 function showFEN(io::IO, cb::ChessBoard)
 
     ## Initial FEN string (board position)
-    blanks = 0
-    for y1  in  8:1:-1
+    for y in  8:-1:1
+        blanks = 0
         for x in 1:8
-            piece = cb.board[y, x].unicode
-            if piece != " "
-                if blanks != 0
+            piece = cb.board[y, x].printrep
+            if piece ≠ " "
+                if blanks ≠ 0
                     print(io, "$blanks")
                     blanks = 0
                 end
@@ -181,11 +181,13 @@ function showFEN(io::IO, cb::ChessBoard)
             else
                 blanks += 1
             end
-            if blanks == 8
-                print(io, "8")
-            end
         end
-        print("/")
+        if blanks == 8
+            print(io, "8")
+        end
+        if y ≠ 1
+            print("/")
+        end
     end
 
     next_player = "w"
