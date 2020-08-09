@@ -164,3 +164,6 @@ Using the FEN viewser  from the chrome market may be sufficient: https://chrome.
 
 ... just pasting the game into this webpage will make it possible to view it, and to analyse it.
 
+Also output PGN notation to allow analysis using external tooling
+
+https://en.wikipedia.org/wiki/Portable_Game_Notation
