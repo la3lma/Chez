@@ -198,7 +198,8 @@ end
 
 ## TODO:  Refactor
 ##  -  Rewrite the FEN writer to operate on game logs rather than logging from
-##     within the tournament  mechanics.
+##     within the tournament  mechanics.   Merging the two logics makes the
+##     code messy.
 ##  -  Add a PGN logger that outputs the game as a PGN log instead
 
 function play_tournament(
