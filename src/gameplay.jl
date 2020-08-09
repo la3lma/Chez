@@ -218,9 +218,11 @@ function play_tournament(
 
         moves_since_capture = 0
         
-        showFEN(logIo, board, "w", "-", "-", "0")
+        showFEN(logIo, board, "w", "-", "-", round)
+        any_captures = false
 
-        while (!game_is_won && round < max_rounds + 1)
+        while (!game_is_won && round < max_rounds)
+            round += 1
             active_strategy = active_player.strategy
             # println(logIo, "Round " , round, " color ", color)
             available_moves = get_moves(color, board)
@@ -231,9 +233,16 @@ function play_tournament(
                 next_move::Move = active_strategy(board, available_moves, move_history, board_history)
 
                 if next_move.capture
-                    moves_since_capture = 0
+                    any_captures = true
+                    moves_since_capture = 0  // TODO: Check if this is base 0 or base 1.
                 else
                     moves_since_capture += 1
+                end
+
+                if any_captures
+                    captures_count = moves_since_capture
+                else
+                    captures_count = "-"
                 end
 
                 # TODO: Check if any of the available moves are rookings
@@ -247,7 +256,7 @@ function play_tournament(
                 push!(board_history, board)
 
                 # todo print FEN log
-                showFEN(logIo, board, other_color(color).shortName, "-", moves_since_capture, round)
+                showFEN(logIo, board, other_color(color).shortName, "-", captures_count, round)
 
                 # println(logIo, board)
                 game_is_won = captures_king(next_move)
@@ -256,7 +265,6 @@ function play_tournament(
                     outcome = Win(color, active_player)
                 end
             end
-            round += 1
             color = other_color(color)
             (active_player, inactive_player) = (inactive_player, active_player)
         end
