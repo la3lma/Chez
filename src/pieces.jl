@@ -81,14 +81,14 @@ end
 
 bp  = ChessPiece(black, pawn,   "p", "♟");
 br  = ChessPiece(black, rook,   "r", "♜");
-bk  = ChessPiece(black, knight, "g", "♞")
+bk  = ChessPiece(black, knight, "n", "♞")
 bb  = ChessPiece(black, bishop, "b", "♝");
 bq  = ChessPiece(black, queen,  "q", "♛");
 bki = ChessPiece(black, king,   "k", "♚");
 
 wp  = ChessPiece(white, pawn,   "P", "♙");
 wr  = ChessPiece(white, rook,   "R", "♖");
-wk  = ChessPiece(white, knight, "G", "♘");
+wk  = ChessPiece(white, knight, "N", "♘");
 wb  = ChessPiece(white, bishop, "B", "♗");
 wq  = ChessPiece(white, queen,  "Q", "♕");
 wki = ChessPiece(white, king,   "K", "♔");
