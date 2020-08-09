@@ -182,8 +182,8 @@ function showFEN(io::IO, cb::ChessBoard)
                 blanks += 1
             end
         end
-        if blanks == 8
-            print(io, "8")
+        if blanks ≠ 0
+            print(io, "$blanks")
         end
         if y ≠ 1
             print("/")
@@ -229,6 +229,8 @@ function play_tournament(
 
         moves_since_capture = 0
         
+        showFEN(logIo, board)
+
         while (!game_is_won && round < max_rounds + 1)
             active_strategy = active_player.strategy
             # println(logIo, "Round " , round, " color ", color)
