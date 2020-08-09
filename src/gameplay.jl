@@ -165,7 +165,7 @@ end
 ## information (next player etc.) but it could/should
 ## be used to log games so that they can be inspected by
 ## humans for more or less obvious strangeness.
-function showFEN(io::IO, cb::ChessBoard)
+function showFEN(io::IO, cb::ChessBoard, next_player::String, possible_castlings::String, moves_since_last_catch, move_number)
 
     ## Initial FEN string (board position)
     for y in  8:-1:1
@@ -189,19 +189,8 @@ function showFEN(io::IO, cb::ChessBoard)
             print("/")
         end
     end
-
-    next_player = "w"
-    possible_castlings = "KQkq" # Indicates possible castling
-    moves_since_last_catch = 0
-    move_number = 101
-
     println(io, " $next_player $possible_castlings $moves_since_last_catch $move_number")
-
 end
-
-## Placeholders
-move_is_capture(move) = false
-
 
 ##
 ## Plying tournaments
@@ -229,7 +218,7 @@ function play_tournament(
 
         moves_since_capture = 0
         
-        showFEN(logIo, board)
+        showFEN(logIo, board, "w", "-", "-", "0")
 
         while (!game_is_won && round < max_rounds + 1)
             active_strategy = active_player.strategy
@@ -239,9 +228,9 @@ function play_tournament(
                 # println(logIo, "Number of moves available = ", length(available_moves))
                 # println(logIo, "Moves available = ", available_moves)
 
-                next_move = active_strategy(board, available_moves, move_history, board_history)
+                next_move::Move = active_strategy(board, available_moves, move_history, board_history)
 
-                if move_is_capture(next_move)
+                if next_move.capture
                     moves_since_capture = 0
                 else
                     moves_since_capture += 1
@@ -258,8 +247,7 @@ function play_tournament(
                 push!(board_history, board)
 
                 # todo print FEN log
-
-                showFEN(logIo, board)
+                showFEN(logIo, board, other_color(color).shortName, "-", moves_since_capture, round)
 
                 # println(logIo, board)
                 game_is_won = captures_king(next_move)
