@@ -26,6 +26,44 @@ function show(io::IO, cb::ChessBoard)
     println(io, " abcdefgh")    
 end
 
+
+## TODO Getting started on FEN priting.   At present, this
+## code isn't being used, and it also doesn't get the necessary
+## information (next player etc.) but it could/should
+## be used to log games so that they can be inspected by
+## humans for more or less obvious strangeness.
+function showFEN(io::IO, cb::ChessBoard)
+
+    ## Initial FEN string (board position)
+    blanks = 0
+    for y1  in  1:8
+        piece = cb.board[y, x].unicode
+        if piece != " "
+            if blanks != 0
+                print(io, "$blanks")
+                blanks = 0
+            end
+            print(io, piece)
+        else
+            blanks += 1
+        end
+        if blanks == 8
+            print(io, "8")
+        end
+        print("/")
+    end
+
+    next_player = "w"
+    possible_castlings = "KQkq" # Indicates possible castling
+    moves_since_last_catch = 0
+    move_number = 101
+
+    println(io, " $next_player $possible_castlings $moves_since_last_catch $move_number")
+
+end
+
+
+
 # Constructing an initial chessboard
 startingBoardArray = [
   wr wk wb wq wki wb wk wr;

@@ -1,0 +1,4 @@
+{
+    "image": "rmz/chezjulia",
+    "extensions": ["julialang.language-julia"]
+}

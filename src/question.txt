@@ -1,0 +1,163 @@
+
+
+I have a project where I'm exploring reinforcement learning.  It's very much a
+work in progress, something I do for my own amusement etc.  Not at all research
+or production grade.
+
+     https://github.com/la3lma/Chez
+
+(the final objective of the project is to make something akin to the
+alphazero chess engine, but I'm obviously a long way away from that).
+
+With all of those caveats in place, I have a question:
+
+When running on my macbook pro workstation running julia 1.XXX this
+code runs without throwing errors:
+
+     include("src/Chez.jl")
+     Chez.learning_increment(false)
+However, when running the same code from within a docker container, it does throw
+an error.   Also that error is a little incomprehensible:
+
+
+     Training: .ERROR: MethodError: no method matching
+       (::Main.Chez.var"#loss#41"{
+	    Flux.Chain{
+		    Tuple{Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},
+			  Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},
+			  Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},
+			  Flux.Dense{typeof(identity),  Array{Float32,2},Array{Float32,1}},
+			  typeof(NNlib.softmax)}
+		    }}
+	    )
+       (::Array{Array{Bool,N} where N,1})
+
+
+    Closest candidates are:
+      loss(::Any, ::Any) at /mnt/src/qlearn.jl:291
+
+... the reason why I find this a little incomprehensible i that as far as I can tell, the
+(::Any, ::Any) type is the most generic type for matching a set of parameters, and as such
+it should match the pair of parameters given in the error message quite nicely, yet it doesn't,
+and I wonder why.
+
+
+Tests to run:
+
+
+1. Run it using julia 1.4.2
+2. Run it from the container, without using the package mechanism, does that change the result?
+
+
+
+Appendix 1: Trace from running interactive session on docker
+==
+    julia> include("Chez.jl")
+    including -> pieces.jl
+    including -> chessboard.jl
+     abcdefgh
+    8♜♞♝♛♚♝♞♜8
+    7♟♟♟♟♟♟♟♟7
+    6        6
+    5        5
+    4        4
+    3        3
+    2♙♙♙♙♙♙♙♙2
+    1♖♘♗♕♔♗♘♖1
+     abcdefgh
+    including -> movement.jl
+    including -> gameplay.jl
+    Testing: Playing tournament
+    Testing: Tournament played
+    including -> learning_logging.jl
+    including -> qlearn.jl
+    Done loading chez.jl
+    Main.Chez
+
+    julia> XXX
+    ERROR: UndefVarError: XXX not defined
+
+    julia> Chez.learning_increment(false)
+    Playing tournament round 1 
+    round 1 p2_advantage = 0.0
+    Q-learning
+       Training: .ERROR: MethodError: no method matching (::Main.Chez.var"#loss#41"{Flux.Chain{Tuple{Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(identity),Array{Float32,2},Array{Float32,1}},typeof(NNlib.softmax)}}})(::Array{Array{Bool,N} where N,1})
+    Closest candidates are:
+      loss(::Any, ::Any) at /mnt/src/qlearn.jl:291
+    Stacktrace:
+     [1] macro expansion at /root/.julia/packages/Zygote/seGHk/src/compiler/interface2.jl:0 [inlined]
+     [2] _pullback(::Zygote.Context, ::Main.Chez.var"#loss#41"{Flux.Chain{Tuple{Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(identity),Array{Float32,2},Array{Float32,1}},typeof(NNlib.softmax)}}}, ::Array{Array{Bool,N} where N,1}) at /root/.julia/packages/Zygote/seGHk/src/compiler/interface2.jl:13
+     [3] adjoint at /root/.julia/packages/Zygote/seGHk/src/lib/lib.jl:175 [inlined]
+     [4] _pullback at /root/.julia/packages/ZygoteRules/6nssF/src/adjoint.jl:47 [inlined]
+     [5] #15 at /root/.julia/packages/Flux/IjMZL/src/optimise/train.jl:83 [inlined]
+     [6] _pullback(::Zygote.Context, ::Flux.Optimise.var"#15#21"{Main.Chez.var"#loss#41"{Flux.Chain{Tuple{Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(NNlib.relu),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(identity),Array{Float32,2},Array{Float32,1}},typeof(NNlib.softmax)}}},Array{Array{Bool,N} where N,1}}) at /root/.julia/packages/Zygote/seGHk/src/compiler/interface2.jl:0
+     [7] pullback(::Function, ::Zygote.Params) at /root/.julia/packages/Zygote/seGHk/src/compiler/interface.jl:172
+     [8] gradient(::Function, ::Zygote.Params) at /root/.julia/packages/Zygote/seGHk/src/compiler/interface.jl:53
+     [9] macro expansion at /root/.julia/packages/Flux/IjMZL/src/optimise/train.jl:82 [inlined]
+     [10] macro expansion at /root/.julia/packages/Juno/tLMZd/src/progress.jl:134 [inlined]
+     [11] train!(::Function, ::Zygote.Params, ::Array{Any,1}, ::Flux.Optimise.ADAM; cb::Flux.Optimise.var"#16#22") at /root/.julia/packages/Flux/IjMZL/src/optimise/train.jl:80
+     [12] train!(::Function, ::Zygote.Params, ::Array{Any,1}, ::Flux.Optimise.ADAM) at /root/.julia/packages/Flux/IjMZL/src/optimise/train.jl:78
+     [13] q_learn!(::Main.Chez.Q_learning_state, ::Array{Main.Chez.Game_Result,1}) at /mnt/src/qlearn.jl:299
+     [14] q_learn_tournament_result!(::Main.Chez.Player, ::Main.Chez.Tournament_Result) at /mnt/src/qlearn.jl:371
+     [15] tournament_learning(::Int64, ::Float64, ::Int64, ::Int64, ::Type{T} where T, ::Type{T} where T, ::Bool, ::Type{T} where T, ::Type{T} where T) at /mnt/src/qlearn.jl:485
+     [16] learning_increment(::Bool) at /mnt/src/qlearn.jl:552	    
+     [17] top-level scope at REPL[3]:1
+
+
+Appendix 2: Trace from iteractive session on macbook pro.
+==
+
+    julia> include("src/Chez.jl") ; Chez.learning_increment(false)
+    WARNING: replacing module Chez.
+    including -> pieces.jl
+    including -> chessboard.jl
+     abcdefgh
+    8♜♞♝♛♚♝♞♜8
+    7♟♟♟♟♟♟♟♟7
+    6        6
+    5        5
+    4        4
+    3        3
+    2♙♙♙♙♙♙♙♙2
+    1♖♘♗♕♔♗♘♖1
+     abcdefgh
+    including -> movement.jl
+    including -> gameplay.jl
+    Testing: Playing tournament
+    Testing: Tournament played
+    including -> learning_logging.jl
+    including -> qlearn.jl
+    Done loading chez.jl
+    Playing tournament round 21 
+    round 21 p2_advantage = 0.0
+    Q-learning
+       Training: ..
+    Snapshotting players in  round ... 21 ...
+	... Done
+    Playing tournament round 22 
+    round 22 p2_advantage = 0.0
+    Q-learning
+       Training: ..
+    Snapshotting players in  round ... 22 ...
+	... Done
+    Playing tournament round 23 
+    round 23 p2_advantage = 0.0
+    Q-learning
+       Training: ..
+    Snapshotting players in  round ... 23 ...
+	... Done
+    Playing tournament round 24 
+    round 24 p2_advantage = 0.0
+    Q-learning
+       Training: ..
+    Snapshotting players in  round ... 24 ...
+	... Done
+    (4×9 DataFrame
+    │ Row │ round │ p1name               │ p2name               │ p1wins │ p2wins │ draws │ p2advantage │ cloning_triggered │ clone_generation │
+    │     │ Int64 │ String               │ String               │ Int64  │ Int64  │ Int64 │ Float64     │ Bool              │ Int64            │
+    ├─────┼───────┼──────────────────────┼──────────────────────┼────────┼────────┼───────┼─────────────┼───────────────────┼──────────────────┤
+    │ 1   │ 21    │ Initial q player (2) │ Clone gen 3 q-player │ 0      │ 0      │ 2     │ 0.0         │ 0                 │ 3                │
+    │ 2   │ 22    │ Initial q player (2) │ Clone gen 3 q-player │ 0      │ 0      │ 2     │ 0.0         │ 0                 │ 3                │
+    │ 3   │ 23    │ Initial q player (2) │ Clone gen 3 q-player │ 0      │ 0      │ 2     │ 0.0         │ 0                 │ 3                │
+    │ 4   │ 24    │ Initial q player (2) │ Clone gen 3 q-player │ 0      │ 0      │ 2     │ 0.0         │ 0                 │ 3                │, Main.Chez.Player("Clone gen 3 q-player", Main.Chez.var"#get_q_choice#36"{Main.Chez.Q_learning_state}(Main.Chez.Q_learning_state(Chain(Dense(960, 960, relu), Dense(960, 400, relu), Dense(400, 200, relu), Dense(200, 100), softmax), Dict{Array{Bool,1},Float32}([0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 1, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 1, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66…), 0.0)), Main.Chez.Q_learning_state(Chain(Dense(960, 960, relu), Dense(960, 400, relu), Dense(400, 200, relu), Dense(200, 100), softmax), Dict{Array{Bool,1},Float32}([0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 1, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 1, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => 0.98,[0, 0, 0, 0, 0, 0, 0, 1, 0, 0  …  0, 0, 0, 0, 0, 0, 0, 0, 0, 0] => -0.66…), 0.0)))
+

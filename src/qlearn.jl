@@ -270,6 +270,8 @@ function learn_from_episode(qs, episode)
     # println("𝛾 = $𝛾")
 
     # learning rate (0 < ɑ <= 1)
+    # Consider tweaking this over time, adding
+    # regulators to hyperparameters is dark magic.
     𝛼 = 0.3
 
     for t in episode_length:-1:1
@@ -277,11 +279,15 @@ function learn_from_episode(qs, episode)
         move   = move_history[t]
         board  = board_history[t]
         color  = get_piece_at(board, move.start).color # color == player, in chess.  Need to generalize that.
-        r      = t != episode_length ? 0 : reward(outcome, color)
+        rew    = reward(outcome, color)
+        r      = t != episode_length ? 0 : rew
         esm    = one_hot_encode_chess_state(board, move)
 
-        # Basic Q-learning formula
-        new_q = q_old(esm) + 𝛼 * (r + 𝛾 * future_value_estimate)
+        # Basic Q-learning formula (with added bias)
+        innovation = 𝛼 * (r + 𝛾 * future_value_estimate)
+        bias =  0.05  * rew
+        
+        new_q = q_old(esm) + innovation + bias
 
         # Since this is an adversarial game, every other
         # round we need to flip the value estimate's sign

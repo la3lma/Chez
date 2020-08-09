@@ -23,6 +23,9 @@ clean:
 	find . -name '*~' -exec rm -f {} \;
 
 
+smoketest:	clean
+	julia --eval 'include("src/Chez.jl")'
+
 
 test:	clean
 	julia --eval 'include("src/Chez.jl"); Chez.learning_increment(false)'

@@ -1,0 +1,50 @@
+[1] (::BSON.var"#29#30")(::Module, ::String) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:20
+ [2] BottomRF at ./reduce.jl:78 [inlined]
+ [3] _foldl_impl(::Base.BottomRF{BSON.var"#29#30"}, ::Module, ::Array{Any,1}) at ./reduce.jl:55
+ [4] foldl_impl at ./reduce.jl:45 [inlined]
+ [5] mapfoldl_impl(::typeof(identity), ::BSON.var"#29#30", ::NamedTuple{(:init,),Tuple{Module}}, ::Array{Any,1}) at ./reduce.jl:41
+ [6] mapfoldl(::Function, ::Function, ::Array{Any,1}; kw::Base.Iterators.Pairs{Symbol,Module,Tuple{Symbol},NamedTuple{(:init,),Tuple{Module}}}) at ./reduce.jl:157
+ [7] _mapreduce_dim at ./reducedim.jl:310 [inlined]
+ [8] #mapreduce#580 at ./reducedim.jl:307 [inlined]
+ [9] #reduce#582 at ./reducedim.jl:352 [inlined]
+ [10] resolve(::Array{Any,1}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:20
+ [11] (::BSON.var"#33#34")(::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:53
+ [12] _raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:79
+ [13] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:89
+ [14] (::BSON.var"#21#22"{IdDict{Any,Any}})(::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:94
+ [15] applychildren!(::BSON.var"#21#22"{IdDict{Any,Any}}, ::Array{Any,1}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:28
+ [16] raise_recursive at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:94 [inlined]
+ [17] (::BSON.var"#17#19"{IdDict{Any,Any}})(::Array{Any,1}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:79
+ [18] applychildren!(::BSON.var"#17#19"{IdDict{Any,Any}}, ::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:21
+ ... (the last 7 lines are repeated 2 more times)
+ [33] _raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:79
+ [34] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:89
+ [35] (::BSON.var"#43#44")(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:138
+ [36] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:88
+ [37] (::BSON.var"#39#40"{IdDict{Any,Any}})(::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:124
+ [38] iterate at ./generator.jl:47 [inlined]
+ [39] _collect(::Array{Any,1}, ::Base.Generator{Array{Any,1},BSON.var"#39#40"{IdDict{Any,Any}}}, ::Base.EltypeUnknown, ::Base.HasShape{1}) at ./array.jl:678
+ [40] collect_similar(::Array{Any,1}, ::Base.Generator{Array{Any,1},BSON.var"#39#40"{IdDict{Any,Any}}}) at ./array.jl:607
+ [41] map(::Function, ::Array{Any,1}) at ./abstractarray.jl:2072
+ [42] newstruct_raw(::IdDict{Any,Any}, ::Type{T} where T, ::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:124
+ [43] (::BSON.var"#43#44")(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:140
+ [44] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:88
+ [45] (::BSON.var"#21#22"{IdDict{Any,Any}})(::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:94
+ [46] applychildren!(::BSON.var"#21#22"{IdDict{Any,Any}}, ::Array{Any,1}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:28
+ [47] raise_recursive at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:94 [inlined]
+ [48] (::BSON.var"#17#19"{IdDict{Any,Any}})(::Array{Any,1}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:79
+ [49] applychildren!(::BSON.var"#17#19"{IdDict{Any,Any}}, ::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:21
+ [50] _raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:79
+ [51] (::BSON.var"#43#44")(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/extensions.jl:139
+ ... (the last 8 lines are repeated 1 more time)
+ [60] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:88
+ [61] (::BSON.var"#18#20"{IdDict{Any,Any}})(::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:82
+ [62] applychildren!(::BSON.var"#18#20"{IdDict{Any,Any}}, ::Dict{Symbol,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:21
+ [63] _raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:82
+ [64] raise_recursive(::Dict{Symbol,Any}, ::IdDict{Any,Any}) at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:89
+ [65] raise_recursive at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:99 [inlined]
+ [66] load at /Users/rmz/.julia/packages/BSON/lY9i8/src/read.jl:104 [inlined]
+ [67] macro expansion at /Users/rmz/.julia/packages/BSON/lY9i8/src/BSON.jl:52 [inlined]
+ [68] restore_q_player(::String) at /Users/rmz/git/AI/Chez/src/qlearn.jl:77
+ [69] learning_increment(::Bool) at /Users/rmz/git/AI/Chez/src/qlearn.jl:528
+

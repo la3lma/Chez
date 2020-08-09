@@ -17,8 +17,8 @@ end
 ##
 abstract type GameOutcome end
 struct Win   <: GameOutcome
-    winner:: Color
-    player:: Player
+    winner::Color
+    player::Player
 end
 
 struct Draw   <: GameOutcome end
@@ -29,7 +29,7 @@ show_string(w::Draw) =  "Draw"
 show(io::IO, w::GameOutcome) = show(io, show_string(w))
 
 
-#XXX Obsolete code.  Remove once it's been proven to be not used anywhere important.
+# XXX Obsolete code.  Remove once it's been proven to be not used anywhere important.
 
 # ##
 # ##   The mechanics of playing a game using some
@@ -124,7 +124,7 @@ struct Tournament_Result
     draws
 end
 
-has_wins(t::Tournament_Result) ::Bool = t.p1wins != 0 || t.p2wins != 00
+has_wins(t::Tournament_Result)::Bool = t.p1wins != 0 || t.p2wins != 00
 
 
 player_is_winner(w::Win,  p::Player)  = (p == w.player)
@@ -159,6 +159,48 @@ function show(io::IO, r::Tournament_Result)
 end
 
 
+
+## TODO Getting started on FEN priting.   At present, this
+## code isn't being used, and it also doesn't get the necessary
+## information (next player etc.) but it could/should
+## be used to log games so that they can be inspected by
+## humans for more or less obvious strangeness.
+function showFEN(io::IO, cb::ChessBoard)
+
+    ## Initial FEN string (board position)
+    blanks = 0
+    for y1  in  8:1:-1
+        for x in 1:8
+            piece = cb.board[y, x].unicode
+            if piece != " "
+                if blanks != 0
+                    print(io, "$blanks")
+                    blanks = 0
+                end
+                print(io, piece)
+            else
+                blanks += 1
+            end
+            if blanks == 8
+                print(io, "8")
+            end
+        end
+        print("/")
+    end
+
+    next_player = "w"
+    possible_castlings = "KQkq" # Indicates possible castling
+    moves_since_last_catch = 0
+    move_number = 101
+
+    println(io, " $next_player $possible_castlings $moves_since_last_catch $move_number")
+
+end
+
+## Placeholders
+move_is_capture(move) = false
+
+
 ##
 ## Plying tournaments
 ##
@@ -167,12 +209,12 @@ function play_tournament(
     player1::Player,
     player2::Player,
     max_rounds=200,
-    tournament_length = 10,
-    io::IO = stdout)::Tournament_Result
+    tournament_length=10,
+    logIo::IO=stdout)::Tournament_Result
 
     function play_game(p1, p2)
 
-        println(io, "Playing a game")
+        println(logIo, "Playing a game")
         (active_player, inactive_player) = (p1, p2)
 
         color = white
@@ -182,27 +224,43 @@ function play_tournament(
         move_history = []
         board_history = []
         outcome = Draw()
+
+        moves_since_capture = 0
         
         while (!game_is_won && round < max_rounds + 1)
-            println("round = $round")
             active_strategy = active_player.strategy
-            # println(io, "Round " , round, " color ", color)
+            # println(logIo, "Round " , round, " color ", color)
             available_moves = get_moves(color, board)
             if (!isempty(available_moves))
-                # println(io, "Number of moves available = ", length(available_moves))
-                # println(io, "Moves available = ", available_moves)
+                # println(logIo, "Number of moves available = ", length(available_moves))
+                # println(logIo, "Moves available = ", available_moves)
 
                 next_move = active_strategy(board, available_moves, move_history, board_history)
-                # println(io, "Applying next_move ",  next_move)
+
+                if move_is_capture(next_move)
+                    moves_since_capture = 0
+                else
+                    moves_since_capture += 1
+                end
+
+                # TODO: Check if any of the available moves are rookings
+
+                # moves_since_capture necessary for FEN logging (to be implemented)
+                
+                # println(logIo, "Applying next_move ",  next_move)
                 board = apply_move!(next_move, board)
 
                 push!(move_history,  next_move)
                 push!(board_history, board)
 
-                # println(io, board)
+                # todo print FEN log
+
+                showFEN(logIo, board)
+
+                # println(logIo, board)
                 game_is_won = captures_king(next_move)
                 if game_is_won
-                    println(io, "Game is won by ",  color)
+                    println(logIo , "Game is won by ",  color)
                     outcome = Win(color, active_player)
                 end
             end
@@ -211,17 +269,17 @@ function play_tournament(
             (active_player, inactive_player) = (inactive_player, active_player)
         end
 
-        println(io, "Outcome = $outcome")
+        println(logIo, "Rounds = $round, Outcome = $outcome")
         return Game_Result(p1, p2, outcome, move_history, board_history)
     end
 
-    println(io, "Before playing games")
-    println(io, "player1 = $player1")
-    println(io, "player2 = $player2")
+    println(logIo, "Before playing games")
+    println(logIo, "player1 = $player1")
+    println(logIo, "player2 = $player2")
     # In the tournament, the players play every other game as white.
     games = [ iseven(i) ?  play_game(player1, player2) : play_game(player2, player1)
               for i in 1:tournament_length ]
-    println(io, "After playing games")
+    println(logIo, "After playing games")
 
     ## Inefficient way of calculating these things.
     p1wins = count_wins_for_player(games, player1)
@@ -246,16 +304,16 @@ println("Testing: Tournament played")
 function read_legal_move_number(no_of_available_moves)
     while true
         # try 
-            j = parse(Int64, readline())
-            println("Just read $j")
+        j = parse(Int64, readline())
+        println("Just read $j")
 
-            if (j < 0 || no_of_available_moves  < j)
-                println("Illegal index $j")
-            else
-                return j
-            end
+        if (j < 0 || no_of_available_moves  < j)
+            println("Illegal index $j")
+        else
+            return j
+        end
        #  catch e
-            println("Not a number, $e")
+        println("Not a number, $e")
        #  end
     end
 end

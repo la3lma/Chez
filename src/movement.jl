@@ -23,7 +23,7 @@ captures_king(m::Move) = (m.destinationPiece.piecetype == king)
 ##
 ## Applying moves
 ##
-function apply_move!(m::Move, board::ChessBoard)
+function apply_move!(m::Move, board::ChessBoard)::ChessBoard
 
     finish_line(color::Color)     =  (color == black) ? 1 : 8
 
