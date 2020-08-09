@@ -186,7 +186,7 @@ function showFEN(io::IO, cb::ChessBoard, next_player::String, possible_castlings
             print(io, "$blanks")
         end
         if y ≠ 1
-            print("/")
+            print(io, "/")
         end
     end
     println(io, " $next_player $possible_castlings $moves_since_last_catch $move_number")
@@ -196,12 +196,17 @@ end
 ## Plying tournaments
 ##
 
+## TODO:  Refactor
+##  -  Rewrite the FEN writer to operate on game logs rather than logging from
+##     within the tournament  mechanics.
+##  -  Add a PGN logger that outputs the game as a PGN log instead
+
 function play_tournament(
     player1::Player,
     player2::Player,
     max_rounds=200,
     tournament_length=10,
-    logIo::IO=stdout)::Tournament_Result
+    logIo::IO=devnull)::Tournament_Result
 
     function play_game(p1, p2)
 
@@ -234,7 +239,7 @@ function play_tournament(
 
                 if next_move.capture
                     any_captures = true
-                    moves_since_capture = 0  // TODO: Check if this is base 0 or base 1.
+                    moves_since_capture = 0 # TODO: Check if this is base 0 or base 1.
                 else
                     moves_since_capture += 1
                 end
