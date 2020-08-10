@@ -356,10 +356,8 @@ todevice(x) = use_gpu ? gpu(x) : x
 
 new_q_chain() =
     Chain(
-        Dense(960, 400, relu),
-        Dense(400, 200, relu),
-        Dense(200, 100, relu),
-        Dense(100, no_of_output_nodes_to_encode_q)
+        Dense(960, 100, relu),
+        Dense(100, no_of_output_nodes_to_encode_q, relu)
     )
 
 new_q_state(chain  = new_q_chain(), randomness::Float64 = 0) =

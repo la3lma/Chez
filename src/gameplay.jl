@@ -11,7 +11,6 @@ struct Player
     state
 end
 
-
 ##
 ##  Representing game outcomes
 ##
@@ -192,6 +191,40 @@ function showFEN(io::IO, cb::ChessBoard, next_player::String, possible_castlings
     println(io, " $next_player $possible_castlings $moves_since_last_catch $move_number")
 end
 
+
+function write_game_logs(tr::Tournament_Result)
+
+
+    function write_game(game::Game_Result)
+
+        for (move::Move,  board::ChessBoard) in zip(game.move_history, game.board_history)
+            if move.capture
+                any_captures = true
+                moves_since_capture = 0 # TODO: Check if this is base 0 or base 1.
+            else
+                moves_since_capture += 1
+            end
+
+            if any_captures
+                captures_count = moves_since_capture
+            else
+                captures_count = "-"
+            end
+
+            showFEN(stdout,  board, other_color(move.startPiece.color).shortName, "-", captures_count, round)
+        end
+    end
+
+    moves_since_capture = 0
+    any_captures = false
+    round = 1
+
+    for game in tr.games
+        write_game(game)
+        round += 1
+    end
+end
+
 ##
 ## Plying tournaments
 ##
@@ -230,41 +263,16 @@ function play_tournament(
         while (!game_is_won && round < max_rounds)
             round += 1
             active_strategy = active_player.strategy
-            # println(logIo, "Round " , round, " color ", color)
             available_moves = get_moves(color, board)
             if (!isempty(available_moves))
-                # println(logIo, "Number of moves available = ", length(available_moves))
-                # println(logIo, "Moves available = ", available_moves)
 
                 next_move::Move = active_strategy(board, available_moves, move_history, board_history)
-
-                if next_move.capture
-                    any_captures = true
-                    moves_since_capture = 0 # TODO: Check if this is base 0 or base 1.
-                else
-                    moves_since_capture += 1
-                end
-
-                if any_captures
-                    captures_count = moves_since_capture
-                else
-                    captures_count = "-"
-                end
-
-                # TODO: Check if any of the available moves are rookings
-
-                # moves_since_capture necessary for FEN logging (to be implemented)
-                
-                # println(logIo, "Applying next_move ",  next_move)
+            
                 board = apply_move!(next_move, board)
 
                 push!(move_history,  next_move)
                 push!(board_history, board)
 
-                # todo print FEN log
-                showFEN(logIo, board, other_color(color).shortName, "-", captures_count, round)
-
-                # println(logIo, board)
                 game_is_won = captures_king(next_move)
                 if game_is_won
                     println(logIo , "Game is won by ",  color)
@@ -286,6 +294,7 @@ function play_tournament(
     games = [ iseven(i) ?  play_game(player1, player2) : play_game(player2, player1)
               for i in 1:tournament_length ]
     println(logIo, "After playing games")
+
 
     ## Inefficient way of calculating these things.
     p1wins = count_wins_for_player(games, player1)

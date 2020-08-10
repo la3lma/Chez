@@ -22,7 +22,6 @@ function tournament_learning(
 
     log = new_learning_log()
 
-
     if initial_tournament_round == Nothing
         initial_tournament_round = 1
     end
@@ -57,7 +56,6 @@ function tournament_learning(
 
     last_tournament_round = initial_tournament_round + no_of_tournament_rounds
 
-    
     for tournament_round in initial_tournament_round:last_tournament_round
 
         # Play the tournament
@@ -67,6 +65,9 @@ function tournament_learning(
             p2,
             max_rounds_in_tournament_games,
             tournament_length)
+
+        println("-->")
+        write_game_logs(tournament_result)
 
         # Extract the values we need to log and progress
         p2_advantage = p2_win_ratio(tournament_result)
@@ -147,8 +148,9 @@ function learning_increment(prod=false)
     p1 = restore_q_player("p1")
     p2 = restore_q_player("p2")
     clone_generation = restore_clone_generation()
-# Next stop is to make store/restore work, but for now it's disabled.    
-#    learning_round = restore_learning_round()
+
+    # Next stop is to make store/restore work, but for now it's disabled.    
+    #    learning_round = restore_learning_round()
 
     learning_round = 0
     
@@ -159,7 +161,7 @@ function learning_increment(prod=false)
     # TODO: Appending to the history is not happening in a proper manner!
 
     if prod
-        tournament_learning(
+        return tournament_learning(
             100,     # no of tournaments
             0.55,    # Trigger
             500,     # Max rounds
@@ -171,7 +173,7 @@ function learning_increment(prod=false)
             learning_round
         )
     else
-        tournament_learning(
+        return tournament_learning(
             3,      # no of tournaments
             0.55,   # Trigger
             500,    # Max rounds

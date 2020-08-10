@@ -8,7 +8,6 @@ To run it, start julia, then run
 
       include("src/Chez.jl")
 
-
 This will load the code and run unit tests. 
 
 
