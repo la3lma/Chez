@@ -126,6 +126,7 @@ over time.   Some ideas are:
 
 * These flags are necessary -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+* https://github.com/JuliaGPU/CUDA.jl/commit/fa32bca8f97b764d5d83fefc1bea0d4282e86d0d
 
 
 ### Strategy development
