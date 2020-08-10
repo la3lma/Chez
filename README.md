@@ -117,6 +117,17 @@ over time.   Some ideas are:
  * Don't be cute, use denormalized tables, one per metric,
 
 
+### Running on GPU with Julia
+
+* Take a look at  docker run -it --rm --gpus all nvcr.io/hpc/julia:v1.2.0 /workspace/examples/test_cudanative.jl, an see
+  if that image is usable out of the box.  If it is, that's nice.
+
+* Can take a look at this https://github.com/maleadt/julia-ngc/blob/master/Dockerfile
+
+* These flags are necessary -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+
+
 ### Strategy development
 
 * Deep neural network, reinforcement learning player based on Flux.jl
