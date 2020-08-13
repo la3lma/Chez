@@ -1,7 +1,9 @@
 ###
 ### Gameplay
 ###
+using Dates
 
+ 
 ##
 ## Players, holding strategies and evolving some state
 ##
@@ -22,7 +24,7 @@ end
 
 struct Draw   <: GameOutcome end
 
-show_string(w::Win)  =  @sprintf("Win by %s", w.winner)
+show_string(w::Win)  =  @sprintf("Win by %s", w.winner.name)
 show_string(w::Draw) =  "Draw"
 
 show(io::IO, w::GameOutcome) = show(io, show_string(w))
@@ -194,35 +196,87 @@ end
 
 function write_game_logs(tr::Tournament_Result)
 
+    function write_FEN_log()
 
-    function write_game(game::Game_Result)
+        function write_game(game::Game_Result)
 
-        for (move::Move,  board::ChessBoard) in zip(game.move_history, game.board_history)
-            if move.capture
-                any_captures = true
-                moves_since_capture = 0 # TODO: Check if this is base 0 or base 1.
-            else
-                moves_since_capture += 1
+            for (move::Move,  board::ChessBoard) in zip(game.move_history, game.board_history)
+                if move.capture
+                    any_captures = true
+                    moves_since_capture = 0 # TODO: Check if this is base 0 or base 1.
+                else
+                    moves_since_capture += 1
+                end
+
+                if any_captures
+                    captures_count = moves_since_capture
+                else
+                    captures_count = "-"
+                end
+
+                showFEN(stdout,  board, other_color(move.startPiece.color).shortName, "-", captures_count, round)
             end
+        end
 
-            if any_captures
-                captures_count = moves_since_capture
-            else
-                captures_count = "-"
-            end
+        moves_since_capture = 0
+        any_captures = false
+        round = 1
 
-            showFEN(stdout,  board, other_color(move.startPiece.color).shortName, "-", captures_count, round)
+        for game in tr.games
+            write_game(game)
+            round += 1
         end
     end
 
-    moves_since_capture = 0
-    any_captures = false
-    round = 1
 
-    for game in tr.games
-        write_game(game)
-        round += 1
+    # https://en.wikipedia.org/wiki/Portable_Game_Notation
+    function write_PGN_log()
+
+        function write_game(game::Game_Result)
+           
+            #### XXXX THis isn't working for weird reasons,.
+            site = "Chez simulation"
+            timenow = Dates.Time(Dates.now(Dates.UTC ))
+            # datestring  = Dates.format(timenow, "yyyy.m.dd HH:MM:SS")
+            whiteplayer = game.p1.id
+            blackplayer = game.p2.id
+
+            println("[Event \"Just another training game\"]")
+            println("[Site \"Cyberspace arena of infinite self play\"]")
+            # println("[Date \"$datestring\"]")
+            # println("[Round \"29\"]")
+            println("[White \"$whiteplayer\"]")
+            println("[Black  \"$blackplayer\"]")
+            
+            outcome = show_string(game.outcome)
+            println("[Result \"$outcome\"]")
+
+
+            #  https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
+            half_move_no = 2
+            move_no = 1
+            for move::Move in game.move_history
+                if half_move_no % 2 == 0
+                    println()
+                    print(move_no)
+                    print(".")
+                    move_no += 1
+                end
+                print(" ")
+                print(move_as_PGN(move))
+                half_move_no += 1
+            end
+            println()
+        
+        end
+
+        for game in tr.games
+            write_game(game)
+        end
     end
+
+    write_PGN_log()
+
 end
 
 ##
@@ -294,7 +348,6 @@ function play_tournament(
     games = [ iseven(i) ?  play_game(player1, player2) : play_game(player2, player1)
               for i in 1:tournament_length ]
     println(logIo, "After playing games")
-
 
     ## Inefficient way of calculating these things.
     p1wins = count_wins_for_player(games, player1)

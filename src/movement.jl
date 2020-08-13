@@ -52,20 +52,28 @@ end
 # Take a look at http://en.wikipedia.org/wiki/Chess_notation, Print moves
 # in an orderly proficient algebraic or long algebraic manner.
 
-# The two implementations below are not really conformant
-
 # Standard Algebraic Notation (SAN)
 function move_as_san(m::Move)::String
     capture = m.capture ? "x" : ""
     return @sprintf("%s%s%s%s", m.startPiece.printrep, m.start, capture, m.destination)
 end
 
+#  Portable Game Notation (PGN)
+function move_as_PGN(m::Move)::String
+    capture = m.capture ? "x" : ""
+    piece = uppercase(m.startPiece.printrep)
+    if piece == "P"
+        piece = ""
+    end
+    return @sprintf("%s%s%s", piece, m.destination, capture)
+end
+
+
 # Figurine Algebraic Notation (FAN)
-function move_as_san(m::Move)::String
+function move_as_fan(m::Move)::String
     capture = m.capture ? "x" : ""
     return @sprintf("%s%s%s%s", m.startPiece.unicode, m.start, capture, m.destination)
 end
-
 
 show(io::IO, m::Move) = show(io, move_as_san(m))
 

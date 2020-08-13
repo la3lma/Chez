@@ -66,7 +66,6 @@ function tournament_learning(
             max_rounds_in_tournament_games,
             tournament_length)
 
-        println("-->")
         write_game_logs(tournament_result)
 
         # Extract the values we need to log and progress
@@ -149,7 +148,7 @@ function learning_increment(prod=false)
     p2 = restore_q_player("p2")
     clone_generation = restore_clone_generation()
 
-    # Next stop is to make store/restore work, but for now it's disabled.    
+    # Next stop is to make store/reistore work, but for now it's disabled.    
     #    learning_round = restore_learning_round()
 
     learning_round = 0

@@ -20,6 +20,9 @@ This will load the code and run unit tests.
 
 * Make playing consistently work again
 
+* Write games (or at least some of them) to a log so they can be inspected by
+  a human to see where the machine get stuck in loops etc.
+
 
 * Persist player state is buggy in several ways.
   * Inconsistent states can be written (fix by renamming
@@ -70,7 +73,6 @@ This will load the code and run unit tests.
  
 
 ### Reflection on the current state
-
 
 I do have a halfway decent implementation of the game mechanics of
 chess. It doesn't have rookings, en passant or draw by repetition
