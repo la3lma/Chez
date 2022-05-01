@@ -165,7 +165,9 @@ References
 ### Chessboards
 
 
-Consider using http://chessboardjs.com/docs to add som real chessboard action.
+Consider using http://chessboardjs.com/docs to add som real chessboard
+action. It seems like very well behaved library.  Mixing it with some
+basic reactjs should be a decent way of getting things done.
 
 this would be relatively easy, if I first implement a printer for
 Forsyth-Edwards notation to encode board positions
@@ -180,3 +182,5 @@ Using the FEN viewser  from the chrome market may be sufficient: https://chrome.
 Also output PGN notation to allow analysis using external tooling
 
 https://en.wikipedia.org/wiki/Portable_Game_Notation
+
+
